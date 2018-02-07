@@ -16,6 +16,7 @@ class WebsitePayment(http.Controller):
         values = {
             'pms': payment_tokens,
             'acquirers': acquirers,
+            'error_message': [kwargs['error']] if kwargs.get('error') else False,
             'return_url': return_url,
             'bootstrap_formatting': True,
             'partner_id': partner.id
@@ -50,7 +51,10 @@ class WebsitePayment(http.Controller):
             'amount': float(amount),
             'payment_form': payment_form,
         }
-        return request.render('payment.pay', values)
+        # TODO: remove return when payment is implemented with refactored payments, i.e. use of
+        # payment.payment_tokens_list in the template.
+        # return request.render('payment.pay', values)
+        return request.render('website.404')
 
     @http.route(['/website_payment/transaction'], type='json', auth="public", website=True)
     def transaction(self, reference, amount, currency_id, acquirer_id):

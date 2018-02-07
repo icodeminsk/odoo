@@ -3,10 +3,11 @@
 # * resource
 # 
 # Translators:
-# Martin Trigaux <mat@odoo.com>, 2017
+# Martin Trigaux, 2017
 # Arma Gedonsky <armagedonsky@hot.ee>, 2017
 # Wanradt Koell <wanradt@gmail.com>, 2017
 # Rivo Zängov <eraser@eraser.ee>, 2017
+# Eneli Õigus <enelioigus@gmail.com>, 2017
 # Egon Raamat <egon@avalah.ee>, 2017
 msgid ""
 msgstr ""
@@ -36,7 +37,7 @@ msgstr "Aktiivne"
 #. module: resource
 #: model:ir.actions.act_window,name:resource.resource_calendar_closing_days
 msgid "Closing Days"
-msgstr "Sulgemise päevad"
+msgstr "Puhkepäevad"
 
 #. module: resource
 #: model:ir.model,name:resource.model_res_company
@@ -190,7 +191,7 @@ msgstr ""
 msgid ""
 "If the active field is set to False, it will allow you to hide the resource "
 "record without removing it."
-msgstr ""
+msgstr "Mitteaktiivset ressursi kirjet on võimalik peita ilma kustutamata."
 
 #. module: resource
 #: model:ir.ui.view,arch_db:resource.view_resource_resource_search
@@ -230,7 +231,7 @@ msgstr "Viimati uuendatud"
 #: model:ir.ui.view,arch_db:resource.resource_calendar_leave_form
 #: model:ir.ui.view,arch_db:resource.resource_calendar_leave_tree
 msgid "Leave Detail"
-msgstr ""
+msgstr "Puhkuse detail"
 
 #. module: resource
 #: model:ir.ui.view,arch_db:resource.view_resource_calendar_leaves_search
@@ -241,7 +242,7 @@ msgstr ""
 #: model:ir.model.fields,field_description:resource.field_resource_calendar_leave_ids
 #: model:ir.ui.view,arch_db:resource.resource_calendar_form
 msgid "Leaves"
-msgstr ""
+msgstr "Puhkused"
 
 #. module: resource
 #: selection:resource.resource,resource_type:0
@@ -283,7 +284,7 @@ msgstr "Põhjus"
 #. module: resource
 #: model:ir.model.fields,help:resource.field_resource_resource_user_id
 msgid "Related user name for the resource to manage its access."
-msgstr ""
+msgstr "Seotud kasutajanimi ressursi juurdepääsu haldamiseks."
 
 #. module: resource
 #: model:ir.model.fields,field_description:resource.field_hr_employee_resource_id

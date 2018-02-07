@@ -496,7 +496,7 @@ msgstr "Prijs"
 #: model:ir.ui.view,arch_db:account_voucher.view_purchase_receipt_form
 #: model:ir.ui.view,arch_db:account_voucher.view_sale_receipt_form
 msgid "Validate"
-msgstr "Controleer"
+msgstr "Bevestig"
 
 #. module: account_voucher
 #: model:ir.ui.view,arch_db:account_voucher.view_purchase_receipt_form
@@ -569,4 +569,4 @@ msgstr ""
 #: code:addons/account_voucher/models/account_voucher.py:377
 #, python-format
 msgid "You must first select a partner!"
-msgstr "Gelieve eerst een klant te selecteren!"
+msgstr "U dient eerst een klant te selecteren!"

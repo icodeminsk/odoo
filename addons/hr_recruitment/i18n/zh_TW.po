@@ -3,15 +3,16 @@
 # * hr_recruitment
 # 
 # Translators:
-# Martin Trigaux <mat@odoo.com>, 2017
-# Michael Yeung <michael@deluxe.hk>, 2017
+# Martin Trigaux, 2017
+# Michael Yeung, 2017
+# Cécile Collart <cco@odoo.com>, 2018
 msgid ""
 msgstr ""
 "Project-Id-Version: Odoo Server 11.0\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2017-11-16 08:08+0000\n"
 "PO-Revision-Date: 2017-11-16 08:08+0000\n"
-"Last-Translator: Michael Yeung <michael@deluxe.hk>, 2017\n"
+"Last-Translator: Cécile Collart <cco@odoo.com>, 2018\n"
 "Language-Team: Chinese (Taiwan) (https://www.transifex.com/odoo/teams/41243/zh_TW/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -432,7 +433,7 @@ msgstr "<span>新增</span>"
 #. module: hr_recruitment
 #: model:ir.ui.view,arch_db:hr_recruitment.view_hr_job_kanban
 msgid "<span>Reporting</span>"
-msgstr ""
+msgstr "<span>報表</span>"
 
 #. module: hr_recruitment
 #: model:ir.ui.view,arch_db:hr_recruitment.view_hr_job_kanban
@@ -1552,7 +1553,7 @@ msgstr ""
 #: model:ir.ui.view,arch_db:hr_recruitment.hr_applicant_view_search
 #: model:ir.ui.view,arch_db:hr_recruitment.view_crm_case_jobs_filter
 msgid "Responsible"
-msgstr ""
+msgstr "負責人"
 
 #. module: hr_recruitment
 #: model:ir.actions.act_window,name:hr_recruitment.hr_applicant_resumes
@@ -1621,12 +1622,12 @@ msgstr ""
 #. module: hr_recruitment
 #: model:ir.model.fields,field_description:hr_recruitment.field_hr_recruitment_source_source_id
 msgid "Source"
-msgstr ""
+msgstr "來源"
 
 #. module: hr_recruitment
 #: model:ir.model.fields,field_description:hr_recruitment.field_hr_recruitment_source_name
 msgid "Source Name"
-msgstr ""
+msgstr "來源名稱"
 
 #. module: hr_recruitment
 #: model:ir.model,name:hr_recruitment.model_hr_recruitment_source
@@ -1651,7 +1652,7 @@ msgstr ""
 #: model:ir.ui.view,arch_db:hr_recruitment.hr_recruitment_stage_form
 #: model:ir.ui.view,arch_db:hr_recruitment.view_crm_case_jobs_filter
 msgid "Stage"
-msgstr ""
+msgstr "階段"
 
 #. module: hr_recruitment
 #: model:mail.message.subtype,name:hr_recruitment.mt_applicant_stage_changed
@@ -1710,7 +1711,7 @@ msgstr ""
 #. module: hr_recruitment
 #: sql_constraint:hr.applicant.category:0
 msgid "Tag name already exists !"
-msgstr ""
+msgstr "標籤名稱已經存在！"
 
 #. module: hr_recruitment
 #: model:ir.actions.act_window,name:hr_recruitment.hr_applicant_category_action

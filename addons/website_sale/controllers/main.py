@@ -445,7 +445,7 @@ class WebsiteSale(http.Controller):
             Partner = order.partner_id.with_context(show_address=1).sudo()
             shippings = Partner.search([
                 ("id", "child_of", order.partner_id.commercial_partner_id.ids),
-                '|', ("type", "=", "delivery"), ("id", "=", order.partner_id.commercial_partner_id.id)
+                '|', ("type", "in", ["delivery", "other"]), ("id", "=", order.partner_id.commercial_partner_id.id)
             ], order='id desc')
             if shippings:
                 if kw.get('partner_id') or 'use_billing' in kw:
@@ -749,7 +749,7 @@ class WebsiteSale(http.Controller):
         values['s2s_acquirers'] = [acq for acq in acquirers if acq.payment_flow == 's2s' and acq.registration_view_template_id]
         values['tokens'] = request.env['payment.token'].search(
             [('partner_id', '=', order.partner_id.id),
-            ('acquirer_id', 'in', [acq.id for acq in values['s2s_acquirers']])])
+            ('acquirer_id', 'in', acquirers.ids)])
 
         for acq in values['form_acquirers']:
             acq.form = acq.with_context(submit_class='btn btn-primary', submit_txt=_('Pay Now')).sudo().render(
@@ -845,7 +845,7 @@ class WebsiteSale(http.Controller):
             return request.redirect('/shop/?error=invalid_token_id')
 
         # We retrieve the token the user want to use to pay
-        token = request.env['payment.token'].browse(pm_id)
+        token = request.env['payment.token'].sudo().browse(pm_id)
         if not token:
             return request.redirect('/shop/?error=token_not_found')
 
@@ -858,9 +858,11 @@ class WebsiteSale(http.Controller):
         # we proceed the s2s payment
         res = tx.confirm_sale_token()
         # we then redirect to the page that validates the payment by giving it error if there's one
-        if res is not True:
-            return request.redirect('/shop/payment/validate?success=False&error=%s' % res)
-        return request.redirect('/shop/payment/validate?success=True')
+        if tx.state != 'authorized' or not tx.acquirer_id.capture_manually:
+            if res is not True:
+                return request.redirect('/shop/payment/validate?success=False&error=%s' % res)
+            return request.redirect('/shop/payment/validate?success=True')
+        return request.redirect('/shop/payment/validate')
 
     @http.route('/shop/payment/get_status/<int:sale_order_id>', type='json', auth="public", website=True)
     def payment_get_status(self, sale_order_id, **post):

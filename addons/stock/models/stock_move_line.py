@@ -50,6 +50,7 @@ class StockMoveLine(models.Model):
     consume_line_ids = fields.Many2many('stock.move.line', 'stock_move_line_consume_rel', 'consume_line_id', 'produce_line_id', help="Technical link to see who consumed what. ")
     produce_line_ids = fields.Many2many('stock.move.line', 'stock_move_line_consume_rel', 'produce_line_id', 'consume_line_id', help="Technical link to see which line was produced with this. ")
     reference = fields.Char(related='move_id.reference', store=True)
+    in_entire_package = fields.Boolean(compute='_compute_in_entire_package')
 
     @api.one
     def _compute_location_description(self):
@@ -79,10 +80,17 @@ class StockMoveLine(models.Model):
         detect errors. """
         raise UserError(_('The requested operation cannot be processed because of a programming error setting the `product_qty` field instead of the `product_uom_qty`.'))
 
+    def _compute_in_entire_package(self):
+        """ This method check if the move line is in an entire pack shown in the picking."""
+        for ml in self:
+            picking_id = ml.picking_id
+            ml.in_entire_package = picking_id and picking_id.picking_type_entire_packs and picking_id.state != 'done'\
+                                   and ml.result_package_id and ml.result_package_id in picking_id.entire_package_ids
+
     @api.constrains('product_uom_qty')
     def check_reserved_done_quantity(self):
         for move_line in self:
-            if move_line.state == 'done' and not float_is_zero(move_line.product_uom_qty, precision_rounding=self.env['decimal.precision'].precision_get('Product Unit of Measure')):
+            if move_line.state == 'done' and not float_is_zero(move_line.product_uom_qty, precision_digits=self.env['decimal.precision'].precision_get('Product Unit of Measure')):
                 raise ValidationError(_('A done move line should never have a reserved quantity.'))
 
     @api.onchange('product_id', 'product_uom_id')
@@ -101,12 +109,41 @@ class StockMoveLine(models.Model):
 
     @api.onchange('lot_name', 'lot_id')
     def onchange_serial_number(self):
+        """ When the user is encoding a move line for a tracked product, we apply some logic to
+        help him. This includes:
+            - automatically switch `qty_done` to 1.0
+            - warn if he has already encoded `lot_name` in another move line
+        """
         res = {}
         if self.product_id.tracking == 'serial':
-            self.qty_done = 1
-            move_lines_to_check = self._get_similar_move_lines() - self
-            message = move_lines_to_check._check_for_duplicated_serial_numbers()
+            if not self.qty_done:
+                self.qty_done = 1
+
+            message = None
+            if self.lot_name or self.lot_id:
+                move_lines_to_check = self._get_similar_move_lines() - self
+                if self.lot_name:
+                    counter = Counter(move_lines_to_check.mapped('lot_name'))
+                    if counter.get(self.lot_name) and counter[self.lot_name] > 1:
+                        message = _('You cannot use the same serial number twice. Please correct the serial numbers encoded.')
+                elif self.lot_id:
+                    counter = Counter(move_lines_to_check.mapped('lot_id.id'))
+                    if counter.get(self.lot_id.id) and counter[self.lot_id.id] > 1:
+                        message = _('You cannot use the same serial number twice. Please correct the serial numbers encoded.')
+
             if message:
+                res['warning'] = {'title': _('Warning'), 'message': message}
+        return res
+
+    @api.onchange('qty_done')
+    def _onchange_qty_done(self):
+        """ When the user is encoding a move line for a tracked product, we apply some logic to
+        help him. This onchange will warn him if he set `qty_done` to a non-supported value.
+        """
+        res = {}
+        if self.product_id.tracking == 'serial':
+            if float_compare(self.qty_done, 1.0, precision_rounding=self.move_id.product_id.uom_id.rounding) != 0:
+                message = _('You can only process 1.0 %s for products with unique serial number.') % self.product_id.uom_id.name
                 res['warning'] = {'title': _('Warning'), 'message': message}
         return res
 
@@ -115,22 +152,6 @@ class StockMoveLine(models.Model):
         if any([ml.qty_done < 0 for ml in self]):
             raise ValidationError(_('You can not enter negative quantities!'))
 
-    @api.constrains('lot_id', 'lot_name', 'qty_done')
-    def _check_unique_serial_number(self):
-        for ml in self.filtered(lambda ml: ml.move_id.product_id.tracking == 'serial' and (ml.lot_id or ml.lot_name)):
-            move_lines_to_check = ml._get_similar_move_lines()
-            message = move_lines_to_check._check_for_duplicated_serial_numbers()
-            if message:
-                raise ValidationError(message)
-            if float_compare(ml.qty_done, 1.0, precision_rounding=ml.move_id.product_id.uom_id.rounding) == 1:
-                raise UserError(_(
-                    'You can only process 1.0 %s for products with unique serial number.') % ml.product_id.uom_id.name)
-            if ml.lot_name:
-                already_exist = self.env['stock.production.lot'].search(
-                    [('name', '=', ml.lot_name), ('product_id', '=', ml.product_id.id)])
-                if already_exist:
-                    return _('You have already assigned this serial number to this product. Please correct the serial numbers encoded.')
-
     def _get_similar_move_lines(self):
         self.ensure_one()
         lines = self.env['stock.move.line']
@@ -138,25 +159,6 @@ class StockMoveLine(models.Model):
         if picking_id:
             lines |= picking_id.move_line_ids.filtered(lambda ml: ml.product_id == self.product_id and (ml.lot_id or ml.lot_name))
         return lines
-
-    def _check_for_duplicated_serial_numbers(self):
-        """ This method is used in _check_unique_serial_number and in onchange_serial_number to check that a same serial number is not used twice amongst the recordset passed.
-
-        :return: an error message directed to the user if needed else False
-        """
-        if self.mapped('lot_id'):
-            lots_map = [(ml.product_id.id, ml.lot_id.name) for ml in self]
-            recorded_serials_counter = Counter(lots_map)
-            for (product_id, lot_id), occurrences in recorded_serials_counter.items():
-                if occurrences > 1 and lot_id is not False:
-                    return _('You cannot use the same serial number twice. Please correct the serial numbers encoded.')
-        elif self.mapped('lot_name'):
-            lots_map = [(ml.product_id.id, ml.lot_name) for ml in self]
-            recorded_serials_counter = Counter(lots_map)
-            for (product_id, lot_id), occurrences in recorded_serials_counter.items():
-                if occurrences > 1 and lot_id is not False:
-                    return _('You cannot use the same serial number twice. Please correct the serial numbers encoded.')
-        return False
 
     @api.model
     def create(self, vals):
@@ -340,7 +342,11 @@ class StockMoveLine(models.Model):
             if ml.product_id.type == 'product' and not ml.location_id.should_bypass_reservation() and not float_is_zero(ml.product_qty, precision_digits=precision):
                 self.env['stock.quant']._update_reserved_quantity(ml.product_id, ml.location_id, -ml.product_qty, lot_id=ml.lot_id,
                                                                    package_id=ml.package_id, owner_id=ml.owner_id, strict=True)
-        return super(StockMoveLine, self).unlink()
+        moves = self.mapped('move_id')
+        res = super(StockMoveLine, self).unlink()
+        if moves:
+            moves._recompute_state()
+        return res
 
     def _action_done(self):
         """ This method is called during a move's `action_done`. It'll actually move a quant from
@@ -461,7 +467,6 @@ class StockMoveLine(models.Model):
                 ('owner_id', '=', owner_id.id if owner_id else False),
                 ('package_id', '=', package_id.id if package_id else False),
                 ('product_qty', '>', 0.0),
-                ('qty_done', '=', 0.0),
                 ('id', '!=', self.id),
             ]
             oudated_candidates = self.env['stock.move.line'].search(oudated_move_lines_domain)
@@ -475,14 +480,17 @@ class StockMoveLine(models.Model):
                 if float_compare(candidate.product_qty, quantity, precision_rounding=rounding) <= 0:
                     quantity -= candidate.product_qty
                     move_to_recompute_state |= candidate.move_id
-                    candidate.unlink()
+                    if candidate.qty_done:
+                        candidate.product_uom_qty = 0.0
+                    else:
+                        candidate.unlink()
                 else:
                     # split this move line and assign the new part to our extra move
                     quantity_split = float_round(
                         candidate.product_qty - quantity,
                         precision_rounding=self.product_uom_id.rounding,
                         rounding_method='UP')
-                    candidate.product_uom_qty = self.product_id.uom_id._compute_quantity(quantity_split, self.product_uom_id, rounding_method='HALF-UP')
+                    candidate.product_uom_qty = self.product_id.uom_id._compute_quantity(quantity_split, candidate.product_uom_id, rounding_method='HALF-UP')
                     quantity -= quantity_split
                     move_to_recompute_state |= candidate.move_id
                 if quantity == 0.0:

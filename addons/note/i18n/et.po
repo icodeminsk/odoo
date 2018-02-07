@@ -3,10 +3,11 @@
 # * note
 # 
 # Translators:
-# Martin Trigaux <mat@odoo.com>, 2017
+# Martin Trigaux, 2017
 # Arma Gedonsky <armagedonsky@hot.ee>, 2017
 # Wanradt Koell <wanradt@gmail.com>, 2017
 # Rivo Zängov <eraser@eraser.ee>, 2017
+# Eneli Õigus <enelioigus@gmail.com>, 2017
 # Egon Raamat <egon@avalah.ee>, 2017
 msgid ""
 msgstr ""
@@ -57,7 +58,7 @@ msgstr "Värvi index"
 #. module: note
 #: model:ir.ui.menu,name:note.menu_note_configuration
 msgid "Configuration"
-msgstr "Seadistus"
+msgstr "Seadistused"
 
 #. module: note
 #: model:ir.model.fields,field_description:note.field_note_note_create_uid
@@ -280,7 +281,7 @@ msgstr "Täna"
 #. module: note
 #: model:ir.ui.view,arch_db:note.view_note_note_filter
 msgid "Today Activities"
-msgstr ""
+msgstr "Tänased tegevused"
 
 #. module: note
 #: model:note.stage,name:note.demo_note_stage_02

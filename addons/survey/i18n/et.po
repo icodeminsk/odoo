@@ -3,10 +3,11 @@
 # * survey
 # 
 # Translators:
-# Martin Trigaux <mat@odoo.com>, 2017
+# Martin Trigaux, 2017
 # Arma Gedonsky <armagedonsky@hot.ee>, 2017
 # Wanradt Koell <wanradt@gmail.com>, 2017
 # Rivo Zängov <eraser@eraser.ee>, 2017
+# Eneli Õigus <enelioigus@gmail.com>, 2017
 # Egon Raamat <egon@avalah.ee>, 2017
 msgid ""
 msgstr ""
@@ -361,7 +362,7 @@ msgstr "Suletud"
 #. module: survey
 #: model:ir.ui.view,arch_db:survey.survey_kanban
 msgid "Color"
-msgstr ""
+msgstr "Värv"
 
 #. module: survey
 #: model:ir.model.fields,field_description:survey.field_survey_survey_color
@@ -403,7 +404,7 @@ msgstr "Koosta e-kiri"
 #. module: survey
 #: model:ir.ui.menu,name:survey.menu_surveys_configuration
 msgid "Configuration"
-msgstr "Seadistus"
+msgstr "Seadistused"
 
 #. module: survey
 #: model:survey.label,value:survey.frow_2_7_2
@@ -600,7 +601,7 @@ msgstr "E-post"
 #. module: survey
 #: model:ir.model.fields,field_description:survey.field_survey_survey_email_template_id
 msgid "Email Template"
-msgstr ""
+msgstr "E-kirja näidis"
 
 #. module: survey
 #: model:ir.model,name:survey.model_survey_mail_compose_message
@@ -640,7 +641,7 @@ msgstr ""
 #. module: survey
 #: model:ir.ui.view,arch_db:survey.survey_question_form
 msgid "Format"
-msgstr ""
+msgstr "Formaat"
 
 #. module: survey
 #: selection:survey.user_input_line,answer_type:0
@@ -765,7 +766,7 @@ msgstr ""
 #: model:survey.question,comments_message:survey.feedback_4_1
 #, python-format
 msgid "If other, please specify:"
-msgstr ""
+msgstr "Kui muu, siis palun täpsustage:"
 
 #. module: survey
 #: model:survey.page,description:survey.feedback_4
@@ -1522,7 +1523,7 @@ msgstr ""
 #: model:ir.ui.view,arch_db:survey.survey_tree
 #: model:ir.ui.view,arch_db:survey.survey_user_input_search
 msgid "Survey"
-msgstr "Uuring"
+msgstr "Küsitlus"
 
 #. module: survey
 #: model:ir.ui.view,arch_db:survey.survey_response_line_tree
@@ -1562,7 +1563,7 @@ msgstr ""
 #. module: survey
 #: model:ir.model,name:survey.model_survey_user_input
 msgid "Survey User Input"
-msgstr ""
+msgstr "Küsitluses osalenud kasutaja sisend"
 
 #. module: survey
 #: model:ir.model,name:survey.model_survey_user_input_line
@@ -1600,7 +1601,7 @@ msgstr ""
 #: model:ir.ui.menu,name:survey.menu_survey_form
 #: model:ir.ui.menu,name:survey.menu_surveys
 msgid "Surveys"
-msgstr ""
+msgstr "Küsitlused"
 
 #. module: survey
 #: model:ir.ui.view,arch_db:survey.survey_kanban
@@ -1671,7 +1672,7 @@ msgstr ""
 #: model:survey.question,validation_error_msg:survey.feedback_4_1
 #, python-format
 msgid "The answer you entered has an invalid format."
-msgstr ""
+msgstr "Sisestatud vastus on vales vormingus."
 
 #. module: survey
 #: code:addons/survey/wizard/survey_email_compose_message.py:139
@@ -1793,7 +1794,7 @@ msgstr "See sõnum kuvatakse, kui küsitlus on lõppenud."
 #: model:survey.question,constr_error_msg:survey.feedback_4_1
 #, python-format
 msgid "This question requires an answer."
-msgstr ""
+msgstr "See küsimus vajab vastust."
 
 #. module: survey
 #: model:ir.ui.view,arch_db:survey.nopages
@@ -1831,7 +1832,7 @@ msgstr "Tiitel"
 #. module: survey
 #: model:ir.ui.view,arch_db:survey.survey_survey_view_search
 msgid "Today Activities"
-msgstr ""
+msgstr "Tänased tegevused"
 
 #. module: survey
 #: model:survey.label,value:survey.fcol_2_1_4

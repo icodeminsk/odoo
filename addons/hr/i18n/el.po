@@ -34,6 +34,8 @@ msgid ""
 "<span class=\"o_unfollow\">Unfollow</span>\n"
 "                                    <span class=\"o_following\">Following</span>"
 msgstr ""
+"<span class=\"o_unfollow\">Άρση Ακολούθησης</span>\n"
+"                                    <span class=\"o_following\">Ακολουθώ</span>"
 
 #. module: hr
 #: model:ir.ui.view,arch_db:hr.hr_department_view_kanban
@@ -60,7 +62,7 @@ msgstr "Ενεργή"
 #: model:ir.ui.view,arch_db:hr.view_department_filter
 #: model:ir.ui.view,arch_db:hr.view_employee_filter
 msgid "Archived"
-msgstr "Αρχειοθετημένα"
+msgstr "Αρχειοθετήθηκαν"
 
 #. module: hr
 #: model:ir.model.fields,field_description:hr.field_hr_employee_bank_account_id

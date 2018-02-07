@@ -26,13 +26,13 @@ class ProjectTaskType(models.Model):
         string='Starred Explanation', translate=True,
         help='Explanation text to help users using the star on tasks or issues in this stage.')
     legend_blocked = fields.Char(
-        'Red Kanban Label', default='Blocked', translate=True, required=True,
+        'Red Kanban Label', default=lambda s: _('Blocked'), translate=True, required=True,
         help='Override the default value displayed for the blocked state for kanban selection, when the task or issue is in that stage.')
     legend_done = fields.Char(
-        'Green Kanban Label', default='Ready for Next Stage', translate=True, required=True,
+        'Green Kanban Label', default=lambda s: _('Ready for Next Stage'), translate=True, required=True,
         help='Override the default value displayed for the done state for kanban selection, when the task or issue is in that stage.')
     legend_normal = fields.Char(
-        'Grey Kanban Label', default='In Progress', translate=True, required=True,
+        'Grey Kanban Label', default=lambda s: _('In Progress'), translate=True, required=True,
         help='Override the default value displayed for the normal state for kanban selection, when the task or issue is in that stage.')
     mail_template_id = fields.Many2one(
         'mail.template',
@@ -245,7 +245,8 @@ class Project(models.Model):
         project = super(Project, self).copy(default)
         for follower in self.message_follower_ids:
             project.message_subscribe(partner_ids=follower.partner_id.ids, subtype_ids=follower.subtype_ids.ids)
-        self.map_tasks(project.id)
+        if 'tasks' not in default:
+            self.map_tasks(project.id)
         return project
 
     @api.model
@@ -265,6 +266,8 @@ class Project(models.Model):
         if 'active' in vals:
             # archiving/unarchiving a project does it on its tasks, too
             self.with_context(active_test=False).mapped('tasks').write({'active': vals['active']})
+            # archiving/unarchiving a project implies that we don't want to use the analytic account anymore
+            self.with_context(active_test=False).mapped('analytic_account_id').write({'active': vals['active']})
         if vals.get('partner_id') or vals.get('privacy_visibility'):
             for project in self.filtered(lambda project: project.privacy_visibility == 'portal'):
                 project.message_subscribe(project.partner_id.ids)
@@ -318,6 +321,8 @@ class Project(models.Model):
         groups = super(Project, self)._notification_recipients(message, groups)
 
         for group_name, group_method, group_data in groups:
+            if group_name in ['customer', 'portal']:
+                continue
             group_data['has_button_access'] = True
 
         return groups
@@ -433,19 +438,19 @@ class Task(models.Model):
     partner_id = fields.Many2one('res.partner',
         string='Customer',
         default=_get_default_partner)
-    manager_id = fields.Many2one('res.users', string='Project Manager', related='project_id.user_id', readonly=True)
+    manager_id = fields.Many2one('res.users', string='Project Manager', related='project_id.user_id', readonly=True, related_sudo=False)
     company_id = fields.Many2one('res.company',
         string='Company',
         default=lambda self: self.env['res.company']._company_default_get())
     color = fields.Integer(string='Color Index')
-    user_email = fields.Char(related='user_id.email', string='User Email', readonly=True)
+    user_email = fields.Char(related='user_id.email', string='User Email', readonly=True, related_sudo=False)
     attachment_ids = fields.One2many('ir.attachment', compute='_compute_attachment_ids', string="Main Attachments",
         help="Attachment that don't come from message.")
     # In the domain of displayed_image_id, we couln't use attachment_ids because a one2many is represented as a list of commands so we used res_model & res_id
     displayed_image_id = fields.Many2one('ir.attachment', domain="[('res_model', '=', 'project.task'), ('res_id', '=', id), ('mimetype', 'ilike', 'image')]", string='Cover Image')
-    legend_blocked = fields.Char(related='stage_id.legend_blocked', string='Kanban Blocked Explanation', readonly=True)
-    legend_done = fields.Char(related='stage_id.legend_done', string='Kanban Valid Explanation', readonly=True)
-    legend_normal = fields.Char(related='stage_id.legend_normal', string='Kanban Ongoing Explanation', readonly=True)
+    legend_blocked = fields.Char(related='stage_id.legend_blocked', string='Kanban Blocked Explanation', readonly=True, related_sudo=False)
+    legend_done = fields.Char(related='stage_id.legend_done', string='Kanban Valid Explanation', readonly=True, related_sudo=False)
+    legend_normal = fields.Char(related='stage_id.legend_normal', string='Kanban Ongoing Explanation', readonly=True, related_sudo=False)
     parent_id = fields.Many2one('project.task', string='Parent Task')
     child_ids = fields.One2many('project.task', 'parent_id', string="Sub-tasks")
     subtask_project_id = fields.Many2one('project.project', related="project_id.subtask_project_id", string='Sub-task Project', readonly=True)
@@ -738,6 +743,8 @@ class Task(models.Model):
 
         groups = [new_group] + groups
         for group_name, group_method, group_data in groups:
+            if group_name in ['customer', 'portal']:
+                continue
             group_data['has_button_access'] = True
 
         return groups

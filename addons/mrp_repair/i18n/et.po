@@ -3,8 +3,9 @@
 # * mrp_repair
 # 
 # Translators:
-# Martin Trigaux <mat@odoo.com>, 2017
+# Martin Trigaux, 2017
 # Arma Gedonsky <armagedonsky@hot.ee>, 2017
+# Eneli Õigus <enelioigus@gmail.com>, 2017
 # Rivo Zängov <eraser@eraser.ee>, 2017
 # Wanradt Koell <wanradt@gmail.com>, 2017
 # Gert Valdek <gert@airobot.ee>, 2017
@@ -230,7 +231,7 @@ msgstr "Loo arve"
 #. module: mrp_repair
 #: model:ir.ui.view,arch_db:mrp_repair.view_make_invoice
 msgid "Create invoices"
-msgstr "Loo arved"
+msgstr "Loo müügiarve"
 
 #. module: mrp_repair
 #: model:ir.model.fields,field_description:mrp_repair.field_mrp_repair_cancel_create_uid
@@ -391,7 +392,7 @@ msgstr "Sisemised märkmed"
 #. module: mrp_repair
 #: model:ir.model.fields,field_description:mrp_repair.field_mrp_repair_line_move_id
 msgid "Inventory Move"
-msgstr "Inventuuri liikumine"
+msgstr "Laoliikumine"
 
 #. module: mrp_repair
 #: model:ir.model.fields,field_description:mrp_repair.field_mrp_repair_invoice_id
@@ -880,7 +881,7 @@ msgstr "Tehakse arve"
 #. module: mrp_repair
 #: model:ir.ui.view,arch_db:mrp_repair.view_repair_order_form_filter
 msgid "Today Activities"
-msgstr ""
+msgstr "Tänased tegevused"
 
 #. module: mrp_repair
 #: model:ir.model.fields,field_description:mrp_repair.field_mrp_repair_amount_total

@@ -4,28 +4,30 @@
 # 
 # Translators:
 # JackTheHunter <Maximilian.N98@gmail.com>, 2017
-# Martin Trigaux <mat@odoo.com>, 2017
+# Martin Trigaux, 2017
 # Rudolf Schnapka <rs@techno-flex.de>, 2017
 # Thomas Neu <t.neu@runbox.com>, 2017
 # Ermin Trevisan <trevi@twanda.com>, 2017
-# Renzo Meister <info@jamotion.ch>, 2017
+# Renzo Meister, 2017
 # Tina Rittmüller <tr@ife.de>, 2017
 # darenkster <inactive+darenkster@transifex.com>, 2017
 # Malte Jansen <work@maltejansen.de>, 2017
-# Wolfgang Taferner <wolfgang.transifex@service.wt-io-it.at>, 2017
+# Wolfgang Taferner, 2017
 # Henry Mineehen <info@mineehen.de>, 2017
 # Anja Funk <anja.funk@afimage.de>, 2017
-# Niki Waibel <niki.waibel@gmail.com>, 2017
+# Niki Waibel, 2017
 # Thorsten Vocks <thorsten.vocks@openbig.org>, 2017
 # Ralf Hilgenstock <rh@dialoge.info>, 2017
 # Thomas Lengyel <lexustec_fn@yahoo.de>, 2017
+# AppleMentalist <felix.schnatbaum@gmail.com>, 2017
+# e2f <projects@e2f.com>, 2018
 msgid ""
 msgstr ""
 "Project-Id-Version: Odoo Server 11.0\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2017-11-16 08:08+0000\n"
 "PO-Revision-Date: 2017-11-16 08:08+0000\n"
-"Last-Translator: Thomas Lengyel <lexustec_fn@yahoo.de>, 2017\n"
+"Last-Translator: e2f <projects@e2f.com>, 2018\n"
 "Language-Team: German (https://www.transifex.com/odoo/teams/41243/de/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -201,6 +203,72 @@ msgid ""
 "</div>\n"
 "            "
 msgstr ""
+"<div style=\"background:#F3F5F6;color:#515166;padding:25px 0px;font-"
+"family:Arial,Helvetica,sans-serif;font-size:14px;\"><table "
+"style=\"width:600px;margin:5px auto;\"><tbody><tr><td><a href=\"/\"><img "
+"src=\"/logo\" alt=\"${object.company_id.name}\" style=\"vertical-"
+"align:baseline;max-width:100px;\" /></a></td><td style=\"text-align:right"
+";vertical-align:middle;\"><a href=\"${object.event_id.website_url}\" style"
+"=\"background-color: #1abc9c; padding: 12px; font-weight: 12px; text-"
+"decoration: none; color: #fff; border-radius: 5px; font-"
+"size:16px;\"></a></td></tr></tbody></table><table "
+"style=\"width:600px;margin:0px auto;background:white;border:1px solid "
+"#e1e1e1;\"><tbody><tr><td style=\"padding:15px 20px 0px 20px; font-"
+"size:16px; font-weight:300;\"><p style=\"font-size:16px;\"></p><p style"
+"=\"font-size:16px;\"></p><ul></ul><p style=\"font-size:16px;\"></p><p style"
+"=\"font-size:16px; margin-bottom: 30px\"><i><br/></i></p></td></tr><tr><td "
+"style=\"padding:15px 20px 0px 20px;\"><table style=\"width:100%;border-"
+"top:1px solid #e1e1e1;\"><tr><td style=\"padding:25px 0px; text-"
+"align:center;\"><p><strong></strong></p><a "
+"href=\"https://www.google.com/calendar/render?action=TEMPLATE&amp;text=${object.event_id.name}&amp;dates=${date_begin}/${date_end}&amp;location=${location}\""
+" style=\"padding:3px 5px;border:1px solid #875A7B;color:#875A7B;text-"
+"decoration:none;border-radius:3px;\" target=\"new\"><img "
+"src=\"/web_editor/font_to_img/61525/rgb(135,90,123)/16\" style=\"vertical-"
+"align:middle;\" height=\"16\"></a><a "
+"href=\"https://bay02.calendar.live.com/calendar/calendar.aspx?rru=addevent&amp;summary=${object.event_id.name}&amp;dtstart=${date_begin}&amp;dtend=${date_end}&amp;location=${location}\""
+" style=\"padding:3px 5px;border:1px solid #875A7B;color:#875A7B;text-"
+"decoration:none;border-radius:3px;\" target=\"new\"><img "
+"src=\"/web_editor/font_to_img/61525/rgb(135,90,123)/16\" style=\"vertical-"
+"align:middle;\" height=\"16\"></a><a "
+"href=\"https://calendar.yahoo.com/?v=60&amp;view=d&amp;type=20&amp;title=${object.event_id.name}&amp;in_loc=${location}&amp;st=${format_tz(object.event_id.date_begin,"
+" tz='UTC', "
+"format='%Y%m%dT%H%M%S')}&amp;et=${format_tz(object.event_id.date_end, "
+"tz='UTC', format='%Y%m%dT%H%M%S')}\" style=\"padding:3px 5px;border:1px "
+"solid #875A7B;color:#875A7B;text-decoration:none;border-radius:3px;\" "
+"target=\"new\"><img src=\"/web_editor/font_to_img/61525/rgb(135,90,123)/16\""
+" style=\"vertical-align:middle;\" height=\"16\"></a></td></tr></table><table"
+" style=\"width:100%;border-top:1px solid #e1e1e1;\"><tr><td "
+"style=\"padding:25px 0px;vertical-align:top;\"><img "
+"src=\"/web_editor/font_to_img/61555/rgb(81,81,102)/34\" style=\"padding:4px"
+";max-width:inherit;\" height=\"34\"></td><td style=\"padding:25px 10px 25px "
+"10px;width:50%;line-height:20px;vertical-"
+"align:top;\"><div><strong></strong></div><div><strong></strong></div><div "
+"style=\"font-"
+"size:12px;color:#9e9e9e\"><i><strong></strong></i></div></td><td "
+"style=\"padding:25px 0px;vertical-align:top;\"><img "
+"src=\"/web_editor/font_to_img/61505/rgb(81,81,102)/34\" style=\"padding:4px"
+";max-width:inherit;\" height=\"34\"></td><td style=\"padding:30px 10px 25px "
+"10px;width:50%;vertical-align:top;\"><p style=\"margin:0px 0px 0px "
+"0px;\"></p><p style=\"margin:0px 0px 0px 0px;\"></p><p style=\"margin:0px "
+"0px 0px 0px;\"></p><p style=\"margin:0px 0px 0px 0px;\"></p><p "
+"style=\"margin:0px 0px 0px 0px;\"></p></td></tr></table><table "
+"style=\"width:100%;border-top:1px solid #e1e1e1;\"><tr><td "
+"style=\"padding:10px 0px 25px 0px;\"><h2 style=\"font-weight:300;margin:10px"
+" "
+"0px\"></h2><p></p><ul><li></li></ul></td></tr></table></td></tr></tbody></table><div"
+" style=\"width:598px;margin:0px auto;border-left:1px solid #dddddd;border-"
+"right:1px solid #dddddd;border-bottom:1px solid #dddddd;\"><a "
+"href=\"https://maps.google.com/maps?q=${location}\" target=\"new\"><img "
+"src=\"http://maps.googleapis.com/maps/api/staticmap?autoscale=1&amp;size=598x200&amp;maptype=roadmap&amp;format=png&amp;visual_refresh=true&amp;markers=size:mid%7Ccolor:0xa5117d%7Clabel:%7C${location}\""
+" style=\"vertical-align:bottom;\" /></a></div><table "
+"style=\"width:600px;margin:0px auto;text-align:center;\"><tbody><tr><td "
+"style=\"padding-top:10px;font-size: 12px;\"><div></div><div><a "
+"href=\"/event\" style=\"text-"
+"decoration:none;color:#717188;\"></a></div></td></tr></tbody></table></div><li><a"
+" href=\"${object.event_id.website_url}\" style=\"color:#875A7B;text-"
+"decoration:none;\"></a><strong></strong></li><li/><li/><li><a "
+"href=\"mailto:${object.event_id.organizer_id.email}\" style=\"text-"
+"decoration:none;color:#875A7B;\"/></li>"
 
 #. module: event
 #: model:mail.template,body_html:event.event_reminder
@@ -364,6 +432,71 @@ msgid ""
 "</div>\n"
 "            "
 msgstr ""
+"<div style=\"background:#F3F5F6;color:#515166;padding:25px 0px;font-"
+"family:Arial,Helvetica,sans-serif;font-size:14px;\"><table "
+"style=\"width:600px;margin:5px auto;\"><tbody><tr><td><a href=\"/\"><img "
+"src=\"/logo\" alt=\"${object.company_id.name}\" style=\"vertical-"
+"align:baseline;max-width:100px;\" /></a></td><td style=\"text-align:right"
+";vertical-align:middle;\"><a href=\"${object.event_id.website_url}\" style"
+"=\"background-color: #1abc9c; padding: 12px; font-weight: 12px; text-"
+"decoration: none; color: #fff; border-radius: 5px; font-"
+"size:16px;\"></a></td></tr></tbody></table><table "
+"style=\"width:600px;margin:0px auto;background:white;border:1px solid "
+"#e1e1e1;\"><tbody><tr><td style=\"padding:15px 20px 0px 20px; font-"
+"size:16px;\"><p style=\"font-size:16px;\"></p><p style=\"font-"
+"size:16px;\"><a href=\"${object.event_id.website_url}\" "
+"style=\"color:#875A7B;text-decoration:none;\"></a><strong></strong></p><p "
+"style=\"font-size:16px;\"></p><p style=\"font-size:16px; margin-bottom: "
+"30px\"><i><br/></i></p></td></tr><tr><td style=\"padding:15px 20px 0px "
+"20px;\"><table style=\"width:100%;border-top:1px solid #e1e1e1;\"><tr><td "
+"style=\"padding:25px 0px;vertical-align:top;\"><img "
+"src=\"/web_editor/font_to_img/61555/rgb(81,81,102)/34\" style=\"padding:4px"
+";max-width:inherit;\" height=\"34\"></td><td style=\"padding:25px 10px 25px "
+"10px;width:50%;line-height:20px;vertical-"
+"align:top;\"><div><strong></strong></div><div><strong></strong></div><div "
+"style=\"font-"
+"size:12px;color:#9e9e9e\"><i><strong></strong></i></div></td><td "
+"style=\"padding:25px 0px;vertical-align:top;\"><img "
+"src=\"/web_editor/font_to_img/61505/rgb(81,81,102)/34\" style=\"padding:4px"
+";max-width:inherit;\" height=\"34\"></td><td style=\"padding:30px 10px 25px "
+"10px;width:50%;vertical-align:top;\"><p style=\"margin:0px 0px 0px "
+"0px;\"></p><p style=\"margin:0px 0px 0px 0px;\"></p><p style=\"margin:0px "
+"0px 0px 0px;\"></p><p style=\"margin:0px 0px 0px 0px;\"></p><p "
+"style=\"margin:0px 0px 0px 0px;\"></p></td></tr></table><table "
+"style=\"width:100%;border-top:1px solid #e1e1e1;\"><tr><td "
+"style=\"padding:10px 0px 25px 0px;\"><h2 style=\"font-weight:300;margin:10px"
+" 0px\"></h2><p></p><ul><li></li></ul></td></tr></table><table "
+"style=\"width:100%;border-top:1px solid #e1e1e1;\"><tr><td "
+"style=\"padding:25px 0px;\"><strong></strong><a "
+"href=\"https://www.google.com/calendar/render?action=TEMPLATE&amp;text=${object.event_id.name}&amp;dates=${date_begin}/${date_end}&amp;location=${location}\""
+" style=\"padding:3px 5px;border:1px solid #875A7B;color:#875A7B;text-"
+"decoration:none;border-radius:3px;\" target=\"new\"><img "
+"src=\"/web_editor/font_to_img/61525/rgb(135,90,123)/16\" style=\"vertical-"
+"align:middle;\" height=\"16\"></a><a "
+"href=\"https://bay02.calendar.live.com/calendar/calendar.aspx?rru=addevent&amp;summary=${object.event_id.name}&amp;dtstart=${date_begin}&amp;dtend=${date_end}&amp;location=${location}\""
+" style=\"padding:3px 5px;border:1px solid #875A7B;color:#875A7B;text-"
+"decoration:none;border-radius:3px;\" target=\"new\"><img "
+"src=\"/web_editor/font_to_img/61525/rgb(135,90,123)/16\" style=\"vertical-"
+"align:middle;\" height=\"16\"></a><a "
+"href=\"https://calendar.yahoo.com/?v=60&amp;view=d&amp;type=20&amp;title=${object.event_id.name}&amp;in_loc=${location}&amp;st=${format_tz(object.event_id.date_begin,"
+" tz='UTC', "
+"format='%Y%m%dT%H%M%S')}&amp;et=${format_tz(object.event_id.date_end, "
+"tz='UTC', format='%Y%m%dT%H%M%S')}\" style=\"padding:3px 5px;border:1px "
+"solid #875A7B;color:#875A7B;text-decoration:none;border-radius:3px;\" "
+"target=\"new\"><img src=\"/web_editor/font_to_img/61525/rgb(135,90,123)/16\""
+" style=\"vertical-align:middle;\" "
+"height=\"16\"></a></td></tr></table></td></tr></tbody></table><div "
+"style=\"width:598px;margin:0px auto;border-left:1px solid #dddddd;border-"
+"right:1px solid #dddddd;border-bottom:1px solid #dddddd;\"><a "
+"href=\"https://maps.google.com/maps?q=${location}\" target=\"new\"><img "
+"src=\"http://maps.googleapis.com/maps/api/staticmap?autoscale=1&amp;size=598x200&amp;maptype=roadmap&amp;format=png&amp;visual_refresh=true&amp;markers=size:mid%7Ccolor:0xa5117d%7Clabel:%7C${location}\""
+" style=\"vertical-align:bottom;\" /></a></div><table "
+"style=\"width:600px;margin:0px auto;text-align:center;\"><tbody><tr><td "
+"style=\"padding-top:10px;font-size: 12px;\"><p style=\"margin:0px 0px 9px "
+"0px;padding-top:10px;\"></p><div><a href=\"/event\" style=\"text-"
+"decoration:none;color:#717188;\"></a></div></td></tr></tbody></table></div><li></li><li><a"
+" href=\"mailto:${object.event_id.organizer_id.email}\" style=\"text-"
+"decoration:none;color:#875A7B;\"></a></li>"
 
 #. module: event
 #: model:mail.template,body_html:event.event_registration_mail_template_badge
@@ -374,12 +507,18 @@ msgid ""
 "<p>Here is your badge for the event ${object.event_id.name}.</p>\n"
 "<p>If you have any questions, please let us know.</p>\n"
 "<p>Best regards,</p>"
-msgstr ""
+msgstr "<p/><p/><p/><p/><p/>"
 
 #. module: event
 #: model:mail.template,subject:event.event_reminder
 msgid "${object.event_id.name}: ${object.get_date_range_str()}"
 msgstr ""
+
+#. module: event
+#: code:addons/event/models/event.py:297
+#, python-format
+msgid "%s (copy)"
+msgstr "%s (Kopie)"
 
 #. module: event
 #: model:event.event,description:event.event_0
@@ -405,14 +544,14 @@ msgstr ""
 msgid ""
 "<em>(Chamber Works reserves the right to cancel, re-name or re-locate<br>the"
 " event or change the dates on which it is held.)</em>"
-msgstr ""
+msgstr "<em><br></em>"
 
 #. module: event
 #: model:event.event,description:event.event_0
 msgid ""
 "<em>(OpenElec Applications reserves the right to cancel, re-name or re-"
 "locate<br>the event or change the dates on which it is held.)</em>"
-msgstr ""
+msgstr "<em><br></em>"
 
 #. module: event
 #: model:event.event,description:event.event_1
@@ -420,7 +559,7 @@ msgstr ""
 msgid ""
 "<em>(YourCompany reserves the right to cancel, re-name or re-locate<br>the "
 "event or change the dates on which it is held.)</em>"
-msgstr ""
+msgstr "<em><br></em>"
 
 #. module: event
 #: model:event.event,description:event.event_0
@@ -430,7 +569,7 @@ msgid ""
 "(dot) com. The presentations should be, for example, a presentation of a "
 "community module, a case study, methodology feedback, technical, etc. Each "
 "presentation must be in English.</em>"
-msgstr ""
+msgstr "<em/>"
 
 #. module: event
 #: model:ir.ui.view,arch_db:event.view_event_kanban
@@ -454,16 +593,18 @@ msgid ""
 "                                        to \n"
 "                                    </span>"
 msgstr ""
+"<span attrs=\"{'invisible': [('seats_availability', '=', 'unlimited')]}\" "
+"class=\"oe_read_only\"/>"
 
 #. module: event
 #: model:event.event,description:event.event_3
 msgid "<strong>5-days Technical Training</strong>"
-msgstr ""
+msgstr "<strong>5-Tages Technisches Training</strong>"
 
 #. module: event
 #: model:event.event,description:event.event_3
 msgid "<strong>Cancellation Policy: </strong>"
-msgstr ""
+msgstr "<strong>Stornierungsbedingungen:</strong>"
 
 #. module: event
 #: model:event.event,description:event.event_2
@@ -473,12 +614,12 @@ msgstr "<strong>Konferenz zu Geschäfts-Apps</strong>"
 #. module: event
 #: model:event.event,description:event.event_3
 msgid "<strong>Course summary:</strong>"
-msgstr ""
+msgstr "<strong>Kurszusammenfassung:</strong>"
 
 #. module: event
 #: model:event.event,description:event.event_1
 msgid "<strong>Functional Webinar</strong>"
-msgstr ""
+msgstr "<strong>Funktionales Webinar</strong>"
 
 #. module: event
 #: model:event.event,description:event.event_3
@@ -491,11 +632,13 @@ msgstr "<strong>Mit Abschluss dieses Kurses können Teilnehmer:</strong>"
 #: model:event.event,description:event.event_0
 msgid "<strong>Join us to our main event of the year: the Open Days</strong>"
 msgstr ""
+"<strong>Begleiten Sie uns zu unserem Hauptereignis des Jahres: den Tagen der"
+" offenen Tür.</strong>"
 
 #. module: event
 #: model:event.event,description:event.event_1
 msgid "<strong>Objective:</strong>"
-msgstr ""
+msgstr "<strong>Objektiv:</strong>"
 
 #. module: event
 #: model:event.event,description:event.event_2
@@ -517,12 +660,12 @@ msgstr "<strong>Programm:</strong>"
 #. module: event
 #: model:event.event,description:event.event_3
 msgid "<strong>Requirements</strong>"
-msgstr ""
+msgstr "<strong>Anforderungen</strong>"
 
 #. module: event
 #: model:event.event,description:event.event_0
 msgid "<strong>What's new for this year?</strong>"
-msgstr ""
+msgstr "<strong>Was gibt es Neues in diesem Jahr?</strong>"
 
 #. module: event
 #: model:event.event,description:event.event_0
@@ -542,6 +685,8 @@ msgid ""
 "Add a navigation menu to your event web pages with schedule, tracks, a track"
 " proposal form, etc."
 msgstr ""
+"Fügen Sie Ihren Veranstaltungs-Webseiten ein Navigationsmenü mit Zeitplan, "
+"Tracks, einem Track-Vorschlagsformular usw. hinzu."
 
 #. module: event
 #: selection:event.mail,interval_type:0
@@ -555,6 +700,9 @@ msgid ""
 "After registering, you will receive a link and password by email before the "
 "start of the session. If you have a problem to connect, please contact us at"
 msgstr ""
+"Nach der Registrierung erhalten Sie vor Beginn der Sitzung per E-Mail einen "
+"Link und ein Passwort. Wenn Sie ein Verbindungsproblem haben, kontaktieren "
+"Sie uns bitte unter"
 
 #. module: event
 #: selection:event.mail,interval_type:0
@@ -573,16 +721,18 @@ msgid ""
 "Are you sure you want to cancel this event? All the linked attendees will be"
 " cancelled as well."
 msgstr ""
+"Sind Sie sicher, dass Sie diese Veranstaltung absagen wollen? Alle "
+"verknüpften Teilnehmer werden ebenfalls gelöscht."
 
 #. module: event
 #: model:event.event,description:event.event_1
 msgid "Ask your questions to our expert;"
-msgstr ""
+msgstr "Stellen Sie Ihre Fragen an unseren Experten;"
 
 #. module: event
 #: model:event.event,description:event.event_1
 msgid "Assess whether your expectations are met;"
-msgstr ""
+msgstr "Beurteilen Sie, ob Ihre Erwartungen erfüllt werden;"
 
 #. module: event
 #: model:ir.ui.view,arch_db:event.res_config_settings_view_form
@@ -636,12 +786,12 @@ msgstr ""
 #. module: event
 #: model:ir.model.fields,field_description:event.field_event_type_auto_confirm
 msgid "Automatically Confirm Registrations"
-msgstr ""
+msgstr "Registrierungen automatisch bestätigen"
 
 #. module: event
 #: model:ir.model.fields,field_description:event.field_event_type_use_mail_schedule
 msgid "Automatically Send Emails"
-msgstr ""
+msgstr "Automatischer E-Mail Versand"
 
 #. module: event
 #: model:ir.model.fields,field_description:event.field_event_event_seats_available
@@ -726,12 +876,12 @@ msgstr "Chamber Works 60, Rosewood Court Detroit, MI 48212 (United States)"
 #. module: event
 #: model:event.event,description:event.event_3
 msgid "Chaussée de Namur 69, 1300 Wavre, Belgium"
-msgstr ""
+msgstr "Chaussée de Namur 69, 1300 Wavre, Belgium"
 
 #. module: event
 #: model:ir.actions.act_window,help:event.act_event_registration_from_event
 msgid "Click to add a new attendee."
-msgstr ""
+msgstr "Klicken hier, um einen neuen Teilnehmer hinzuzufügen."
 
 #. module: event
 #: model:ir.actions.act_window,help:event.action_event_view
@@ -775,7 +925,7 @@ msgstr "Konferenz über Geschäftsanwendungen"
 #. module: event
 #: model:event.event,description:event.event_0
 msgid "Conferences, workshops and trainings will be organized in 6 rooms:"
-msgstr ""
+msgstr "Konferenzen, Workshops und Schulungen werden in 6 Räumen organisiert:"
 
 #. module: event
 #: model:ir.ui.menu,name:event.menu_event_configuration
@@ -887,7 +1037,7 @@ msgstr "Entwicklung eines neuen Moduls für eine spezifische Anwendung."
 #. module: event
 #: model:event.event,description:event.event_1
 msgid "Discover how to navigate in our software;"
-msgstr ""
+msgstr "Entdecke , wie Du unsere Software optimal bedienen kannst;"
 
 #. module: event
 #: model:ir.model.fields,field_description:event.field_event_confirm_display_name
@@ -926,6 +1076,8 @@ msgid ""
 "Each session lasts approximately one hour and is free, we just ask you to "
 "register to receive access codes."
 msgstr ""
+"Jede Sitzung dauert ungefähr eine Stunde und ist kostenlos, wir bitten Sie "
+"lediglich, sich zu registrieren, um einen Zugangscodes zu erhalten."
 
 #. module: event
 #: model:ir.model.fields,field_description:event.field_event_registration_email
@@ -1089,7 +1241,7 @@ msgstr ""
 #. module: event
 #: model:ir.model.fields,help:event.field_event_type_auto_confirm
 msgid ""
-"Events and registrations will automatically be confirmedupon creation, "
+"Events and registrations will automatically be confirmed upon creation, "
 "easing the flow for simple events."
 msgstr ""
 
@@ -1220,7 +1372,7 @@ msgstr ""
 msgid ""
 "If you have a question<strong> concerning the content of the "
 "training</strong>, please contact"
-msgstr ""
+msgstr "<strong/>"
 
 #. module: event
 #: selection:event.mail,interval_unit:0
@@ -1304,7 +1456,7 @@ msgstr "Begrenzt"
 #. module: event
 #: model:ir.model.fields,field_description:event.field_event_type_has_seats_limitation
 msgid "Limited Seats"
-msgstr ""
+msgstr "Limitierte Sitzplätze"
 
 #. module: event
 #: model:ir.model.fields,field_description:event.field_event_event_address_id
@@ -1379,7 +1531,7 @@ msgstr "Max. Teilnehmeranzahl"
 #. module: event
 #: model:ir.model.fields,field_description:event.field_event_type_default_registration_max
 msgid "Maximum Registrations"
-msgstr ""
+msgstr "Maximale Anmeldungen"
 
 #. module: event
 #: code:addons/event/models/event.py:253
@@ -1396,7 +1548,7 @@ msgstr "Mindestzahl an Teilnehmern"
 #. module: event
 #: model:ir.model.fields,field_description:event.field_event_type_default_registration_min
 msgid "Minimum Registrations"
-msgstr ""
+msgstr "Minimale Anmeldungen"
 
 #. module: event
 #: selection:event.mail,interval_unit:0
@@ -1442,7 +1594,7 @@ msgstr "Anzahl Teilnehmer"
 #: model:ir.model.fields,help:event.field_res_partner_event_count
 #: model:ir.model.fields,help:event.field_res_users_event_count
 msgid "Number of events the partner has participated."
-msgstr ""
+msgstr "Anzahl der Veranstaltungen, an denen der Partner teilgenommen hat."
 
 #. module: event
 #: model:ir.actions.act_window,help:event.action_event_view
@@ -1462,12 +1614,12 @@ msgstr "Online"
 #: model:ir.model.fields,field_description:event.field_event_event_is_online
 #: model:ir.model.fields,field_description:event.field_event_type_is_online
 msgid "Online Event"
-msgstr ""
+msgstr "Online Event"
 
 #. module: event
 #: model:ir.model.fields,field_description:event.field_res_config_settings_module_website_event_sale
 msgid "Online Ticketing"
-msgstr ""
+msgstr "Online Veranstaltungstickets"
 
 #. module: event
 #: model:ir.ui.view,arch_db:event.view_event_type_form
@@ -1475,6 +1627,8 @@ msgid ""
 "Online events like webinars do not require a specific location\n"
 "                                            and are hosted online."
 msgstr ""
+"Online-Veranstaltungen wie z.B. Webinare benötigen keinen bestimmten Ort.\n"
+"und werden online gehostet."
 
 #. module: event
 #: model:ir.model.fields,help:event.field_event_type_is_online
@@ -1482,6 +1636,8 @@ msgid ""
 "Online events like webinars do not require a specific location and are "
 "hosted online."
 msgstr ""
+"Online-Veranstaltungen wie z.B. Webinare benötigen keinen bestimmten Ort.\n"
+"und werden online gehostet."
 
 #. module: event
 #: model:event.event,name:event.event_0
@@ -1493,6 +1649,7 @@ msgstr "Open Days in Los Angeles"
 msgid ""
 "OpenElec Applications 23 Rockwell Lane, Los Angeles, CA 90001, United States"
 msgstr ""
+"OpenElec Applications 23 Rockwell Lane, Los Angeles, CA 90001, United States"
 
 #. module: event
 #: model:ir.model.fields,field_description:event.field_event_event_organizer_id
@@ -1637,7 +1794,7 @@ msgstr "Verantwortlich"
 #. module: event
 #: model:ir.ui.view,arch_db:event.res_config_settings_view_form
 msgid "Scan badges to confirm attendances"
-msgstr ""
+msgstr "Ausweise scannen, um Anwesenheiten zu bestätigen"
 
 #. module: event
 #: model:ir.ui.view,arch_db:event.res_config_settings_view_form
@@ -1657,7 +1814,7 @@ msgstr "Geplante Lieferung"
 #. module: event
 #: model:ir.ui.view,arch_db:event.res_config_settings_view_form
 msgid "Sell tickets on your website"
-msgstr ""
+msgstr "Verkaufen Sie Tickets auf Ihrer Website"
 
 #. module: event
 #: model:ir.ui.view,arch_db:event.res_config_settings_view_form
@@ -1845,7 +2002,7 @@ msgstr "Auslöser"
 #. module: event
 #: model:ir.model.fields,field_description:event.field_event_mail_interval_type
 msgid "Trigger "
-msgstr ""
+msgstr "Auslöser"
 
 #. module: event
 #: model:ir.model.fields,field_description:event.field_event_event_twitter_hashtag
@@ -1909,7 +2066,7 @@ msgstr ""
 #. module: event
 #: model:ir.model.fields,field_description:event.field_event_type_use_timezone
 msgid "Use Default Timezone"
-msgstr ""
+msgstr "Standard-Zeitzone verwenden"
 
 #. module: event
 #: model:res.groups,name:event.group_event_user
@@ -2009,42 +2166,42 @@ msgstr "event.confirm"
 #: model:event.event,description:event.event_2
 #: model:event.event,description:event.event_3
 msgid "events@odoo.com"
-msgstr ""
+msgstr "events@odoo.com"
 
 #. module: event
 #: model:event.event,description:event.event_0
 #: model:event.event,description:event.event_1
 #: model:event.event,description:event.event_3
 msgid "events@yourcompany.com"
-msgstr ""
+msgstr "events@yourcompany.com"
 
 #. module: event
 #: model:event.event,description:event.event_3
 msgid "http://bit.ly/VD8J67."
-msgstr ""
+msgstr "http://bit.ly/VD8J67."
 
 #. module: event
 #: model:event.event,description:event.event_3
 msgid "https://www.odoo.com/services/technical-training"
-msgstr ""
+msgstr "https://www.odoo.com/services/technical-training"
 
 #. module: event
 #: code:addons/event/models/event.py:497
 #, python-format
 msgid "in %d days"
-msgstr ""
+msgstr "In %dTag"
 
 #. module: event
 #: code:addons/event/models/event.py:501
 #, python-format
 msgid "next month"
-msgstr ""
+msgstr "nächster Monat"
 
 #. module: event
 #: code:addons/event/models/event.py:499
 #, python-format
 msgid "next week"
-msgstr ""
+msgstr "nächste Woche "
 
 #. module: event
 #: code:addons/event/models/event.py:503
@@ -2061,13 +2218,13 @@ msgstr "res.config.settings"
 #: code:addons/event/models/event.py:493
 #, python-format
 msgid "today"
-msgstr ""
+msgstr "heute"
 
 #. module: event
 #: code:addons/event/models/event.py:495
 #, python-format
 msgid "tomorrow"
-msgstr ""
+msgstr "morgen"
 
 #. module: event
 #: model:event.event,description:event.event_3

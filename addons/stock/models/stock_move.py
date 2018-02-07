@@ -115,9 +115,9 @@ class StockMove(models.Model):
         ('make_to_stock', 'Default: Take From Stock'),
         ('make_to_order', 'Advanced: Apply Procurement Rules')], string='Supply Method',
         default='make_to_stock', required=True,
-        help="By default, the system will take from the stock in the source location and passively wait for availability."
+        help="By default, the system will take from the stock in the source location and passively wait for availability. "
              "The other possibility allows you to directly create a procurement on the source location (and thus ignore "
-             "its current stock) to gather products. If we want to chain moves and have this one to wait for the previous,"
+             "its current stock) to gather products. If we want to chain moves and have this one to wait for the previous, "
              "this second option should be chosen.")
     scrapped = fields.Boolean('Scrapped', related='location_dest_id.scrap_location', readonly=True, store=True)
     scrap_ids = fields.One2many('stock.scrap', 'move_id')
@@ -265,14 +265,17 @@ class StockMove(models.Model):
         detect errors. """
         raise UserError(_('The requested operation cannot be processed because of a programming error setting the `product_qty` field instead of the `product_uom_qty`.'))
 
-    @api.one
+    @api.multi
     @api.depends('move_line_ids.product_qty')
     def _compute_reserved_availability(self):
         """ Fill the `availability` field on a stock move, which is the actual reserved quantity
         and is represented by the aggregated `product_qty` on the linked move lines. If the move
         is force assigned, the value will be 0.
         """
-        self.reserved_availability = self.product_id.uom_id._compute_quantity(sum(self.move_line_ids.mapped('product_qty')), self.product_uom, rounding_method='HALF-UP')
+        result = {data['move_id'][0]: data['product_qty'] for data in 
+            self.env['stock.move.line'].read_group([('move_id', 'in', self.ids)], ['move_id','product_qty'], ['move_id'])}
+        for rec in self:
+            rec.reserved_availability = rec.product_id.uom_id._compute_quantity(result.get(rec.id, 0.0), rec.product_uom, rounding_method='HALF-UP')
 
     @api.one
     @api.depends('state', 'product_id', 'product_qty', 'location_id')
@@ -313,10 +316,12 @@ class StockMove(models.Model):
 
     @api.constrains('product_uom')
     def _check_uom(self):
-        moves_error = self.filtered(lambda move: move.product_id.uom_id.category_id.id != move.product_uom.category_id.id)
+        moves_error = self.filtered(lambda move: move.product_id.uom_id.category_id != move.product_uom.category_id)
         if moves_error:
             user_warning = _('You try to move a product using a UoM that is not compatible with the UoM of the product moved. Please use an UoM in the same UoM category.')
-            user_warning += '\n\nBlocking: %s' % ' ,'.join(moves_error.mapped('name'))
+            for move in moves_error:
+                user_warning += _('\n\n%s --> Product UoM is %s (%s) - Move UoM is %s (%s)') % (move.product_id.display_name, move.product_id.uom_id.name, move.product_id.uom_id.category_id.name, move.product_uom.name, move.product_uom.category_id.name)
+            user_warning += _('\n\nBlocking: %s') % ' ,'.join(moves_error.mapped('name'))
             raise UserError(user_warning)
 
     @api.model_cr
@@ -402,7 +407,7 @@ class StockMove(models.Model):
                     if propagated_date_field:
                         current_date = datetime.strptime(move.date_expected, DEFAULT_SERVER_DATETIME_FORMAT)
                         new_date = datetime.strptime(vals.get(propagated_date_field), DEFAULT_SERVER_DATETIME_FORMAT)
-                        delta = new_date - current_date
+                        delta = relativedelta.relativedelta(new_date, current_date)
                         if abs(delta.days) >= move.company_id.propagation_minimum_delta:
                             old_move_date = datetime.strptime(move.move_dest_ids[0].date_expected, DEFAULT_SERVER_DATETIME_FORMAT)
                             new_move_date = (old_move_date + relativedelta.relativedelta(days=delta.days or 0)).strftime(DEFAULT_SERVER_DATETIME_FORMAT)
@@ -466,14 +471,7 @@ class StockMove(models.Model):
     def _do_unreserve(self):
         if any(move.state in ('done', 'cancel') for move in self):
             raise UserError(_('Cannot unreserve a done move'))
-        for move in self:
-            move.move_line_ids.unlink()
-            if move.procure_method == 'make_to_order' and not move.move_orig_ids:
-                move.state = 'waiting'
-            elif move.move_orig_ids and not all(orig.state in ('done', 'cancel') for orig in move.move_orig_ids):
-                move.state = 'waiting'
-            else:
-                move.state = 'confirmed'
+        self.mapped('move_line_ids').unlink()
         return True
 
     def _push_apply(self):
@@ -818,7 +816,8 @@ class StockMove(models.Model):
 
         # Find a candidate move line to update or create a new one.
         for reserved_quant, quantity in quants:
-            to_update = self.move_line_ids.filtered(lambda m: m.location_id.id == reserved_quant.location_id.id and m.lot_id.id == reserved_quant.lot_id.id and m.package_id.id == reserved_quant.package_id.id and m.owner_id.id == reserved_quant.owner_id.id)
+            to_update = self.move_line_ids.filtered(lambda m: m.product_id.tracking != 'serial' and
+                                                    m.location_id.id == reserved_quant.location_id.id and m.lot_id.id == reserved_quant.lot_id.id and m.package_id.id == reserved_quant.package_id.id and m.owner_id.id == reserved_quant.owner_id.id)
             if to_update:
                 to_update[0].with_context(bypass_reservation_update=True).product_uom_qty += self.product_id.uom_id._compute_quantity(quantity, self.product_uom, rounding_method='HALF-UP')
             else:
@@ -1002,22 +1001,21 @@ class StockMove(models.Model):
 
         moves = self.filtered(lambda x: x.state not in ('done', 'cancel'))
         moves_todo = self.env['stock.move']
-        # Create extra moves where necessary
+
+        # Cancel moves where necessary ; we should do it before creating the extra moves because
+        # this operation could trigger a merge of moves.
         for move in moves:
-            # Here, the `quantity_done` was already rounded to the product UOM by the `do_produce` wizard. However,
-            # it is possible that the user changed the value before posting the inventory by a value that should be
-            # rounded according to the move's UOM. In this specific case, we chose to round up the value, because it
-            # is what is expected by the user (if i consumed/produced a little more, the whole UOM unit should be
-            # consumed/produced and the moves are split correctly).
-            # FIXME: move rounding to move line
-            # rounding = move.product_uom.rounding
-            # move.quantity_done = float_round(move.quantity_done, precision_rounding=rounding, rounding_method ='UP')
             if move.quantity_done <= 0:
                 if float_compare(move.product_uom_qty, 0.0, precision_rounding=move.product_uom.rounding) == 0:
                     move._action_cancel()
+
+        # Create extra moves where necessary
+        for move in moves:
+            if move.state == 'cancel' or move.quantity_done <= 0:
                 continue
             moves_todo |= move
             moves_todo |= move._create_extra_move()
+
         # Split moves where necessary and move quants
         for move in moves_todo:
             rounding = move.product_uom.rounding
@@ -1136,7 +1134,9 @@ class StockMove(models.Model):
             elif move.reserved_availability and move.reserved_availability <= move.product_uom_qty:
                 move.state = 'partially_available'
             else:
-                if move.move_orig_ids:
+                if move.procure_method == 'make_to_order' and not move.move_orig_ids:
+                    move.state = 'waiting'
+                elif move.move_orig_ids and not all(orig.state in ('done', 'cancel') for orig in move.move_orig_ids):
                     move.state = 'waiting'
                 else:
                     move.state = 'confirmed'

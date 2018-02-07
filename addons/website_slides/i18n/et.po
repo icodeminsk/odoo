@@ -3,10 +3,11 @@
 # * website_slides
 # 
 # Translators:
-# Martin Trigaux <mat@odoo.com>, 2017
+# Martin Trigaux, 2017
 # Wanradt Koell <wanradt@gmail.com>, 2017
 # Arma Gedonsky <armagedonsky@hot.ee>, 2017
 # Rivo Zängov <eraser@eraser.ee>, 2017
+# Eneli Õigus <enelioigus@gmail.com>, 2017
 # Egon Raamat <egon@avalah.ee>, 2017
 msgid ""
 msgstr ""
@@ -298,7 +299,7 @@ msgstr "Arhiveeritud"
 
 #. module: website_slides
 #: selection:slide.slide,download_security:0
-msgid "Authentified Users Only"
+msgid "Authenticated Users Only"
 msgstr ""
 
 #. module: website_slides
@@ -895,7 +896,7 @@ msgstr ""
 #. module: website_slides
 #: model:slide.slide,name:website_slides.slide_6
 msgid "Odoo Marketing"
-msgstr ""
+msgstr "Odoo turundus"
 
 #. module: website_slides
 #: model:slide.slide,name:website_slides.slide_8
@@ -1120,7 +1121,7 @@ msgstr ""
 #: model:ir.ui.view,arch_db:website_slides.res_config_settings_view_form
 #: model:ir.ui.view,arch_db:website_slides.view_slide_slide_tree
 msgid "Slides"
-msgstr ""
+msgstr "Presentatsioon"
 
 #. module: website_slides
 #: model:ir.model,name:website_slides.model_slide_category
@@ -1336,7 +1337,7 @@ msgstr ""
 #. module: website_slides
 #: model:ir.ui.view,arch_db:website_slides.view_slide_slide_form
 msgid "Website"
-msgstr "Veebisait"
+msgstr "Internetileht"
 
 #. module: website_slides
 #. openerp-web

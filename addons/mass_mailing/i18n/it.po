@@ -3,15 +3,16 @@
 # * mass_mailing
 # 
 # Translators:
-# Martin Trigaux <mat@odoo.com>, 2017
-# Paolo Valier <paolo.valier@hotmail.it>, 2017
+# Martin Trigaux, 2017
+# Paolo Valier, 2017
+# Cesare Cugnasco <cesare.cugnasco@gmail.com>, 2018
 msgid ""
 msgstr ""
 "Project-Id-Version: Odoo Server 11.0\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2017-11-16 08:08+0000\n"
 "PO-Revision-Date: 2017-11-16 08:08+0000\n"
-"Last-Translator: Paolo Valier <paolo.valier@hotmail.it>, 2017\n"
+"Last-Translator: Cesare Cugnasco <cesare.cugnasco@gmail.com>, 2018\n"
 "Language-Team: Italian (https://www.transifex.com/odoo/teams/41243/it/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -47,7 +48,7 @@ msgstr ""
 #: code:addons/mass_mailing/models/mass_mailing.py:466
 #, python-format
 msgid "%s (copy)"
-msgstr ""
+msgstr "%s (copia)"
 
 #. module: mass_mailing
 #: model:ir.ui.view,arch_db:mass_mailing.s_mail_block_discount1
@@ -126,7 +127,7 @@ msgstr ""
 #. module: mass_mailing
 #: model:ir.ui.view,arch_db:mass_mailing.snippet_options
 msgid "<i class=\"fa fa-eyedropper\"/>Background Color"
-msgstr ""
+msgstr "<i class=\"fa fa-eyedropper\"/>Colore di Sfondo"
 
 #. module: mass_mailing
 #: model:ir.ui.view,arch_db:mass_mailing.email_designer_snippets
@@ -227,7 +228,7 @@ msgstr ""
 #: model:ir.model.fields,field_description:mass_mailing.field_mail_mass_mailing_active
 #: model:ir.model.fields,field_description:mass_mailing.field_mail_mass_mailing_list_active
 msgid "Active"
-msgstr ""
+msgstr "Attivo"
 
 #. module: mass_mailing
 #: model:ir.model.fields,field_description:mass_mailing.field_mail_mass_mailing_campaign_unique_ab_testing
@@ -751,7 +752,7 @@ msgstr "Raggruppa per"
 #. module: mass_mailing
 #: model:ir.ui.view,arch_db:mass_mailing.view_mail_statistics_report_search
 msgid "Group By..."
-msgstr ""
+msgstr "Raggruppa per..."
 
 #. module: mass_mailing
 #: model:ir.model.fields,field_description:mass_mailing.field_mail_mail_statistics_id
@@ -1551,7 +1552,7 @@ msgstr ""
 #: model:ir.model.fields,field_description:mass_mailing.field_mail_mass_mailing_campaign_stage_id
 #: model:ir.ui.view,arch_db:mass_mailing.view_mail_mass_mailing_campaign_search
 msgid "Stage"
-msgstr ""
+msgstr "Fase"
 
 #. module: mass_mailing
 #: model:ir.model.fields,field_description:mass_mailing.field_mail_mail_statistics_state

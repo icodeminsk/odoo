@@ -1651,7 +1651,8 @@ class BaseModel(MetaModel('DummyModel', (object,), {'_register': False})):
                     order = '"%s" %s' % (order_field, '' if len(order_split) == 1 else order_split[1])
                     orderby_terms.append(order)
             elif order_field in aggregated_fields:
-                orderby_terms.append(order_part)
+                order_split[0] = '"' + order_field + '"'
+                orderby_terms.append(' '.join(order_split))
             else:
                 # Cannot order by a field that will not appear in the results (needs to be grouped or aggregated)
                 _logger.warn('%s: read_group order by `%s` ignored, cannot sort on empty columns (not grouped/aggregated)',
@@ -3821,7 +3822,9 @@ class BaseModel(MetaModel('DummyModel', (object,), {'_register': False})):
                     del vals['module']      # duplicated vals is not linked to any module
                     vals['res_id'] = target_id
                     if vals['lang'] == old.env.lang and field.translate is True:
-                        vals['source'] = old_wo_lang[name]
+                        # force a source if the new_val was not changed by copy override
+                        if new_val == old[name]:
+                            vals['source'] = old_wo_lang[name]
                         # the value should be the new value (given by copy())
                         vals['value'] = new_val
                     Translation.create(vals)

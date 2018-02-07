@@ -3,11 +3,12 @@
 # * fleet
 # 
 # Translators:
-# Martin Trigaux <mat@odoo.com>, 2017
+# Martin Trigaux, 2017
 # Gert Valdek <gert@airobot.ee>, 2017
 # Arma Gedonsky <armagedonsky@hot.ee>, 2017
 # Rivo Zängov <eraser@eraser.ee>, 2017
 # Wanradt Koell <wanradt@gmail.com>, 2017
+# Eneli Õigus <enelioigus@gmail.com>, 2017
 # Egon Raamat <egon@avalah.ee>, 2017
 msgid ""
 msgstr ""
@@ -316,7 +317,7 @@ msgstr "Suletud"
 #. module: fleet
 #: model:ir.model.fields,field_description:fleet.field_fleet_vehicle_color
 msgid "Color"
-msgstr ""
+msgstr "Värv"
 
 #. module: fleet
 #: model:ir.model.fields,field_description:fleet.field_fleet_vehicle_tag_color
@@ -341,7 +342,7 @@ msgstr "Ettevõte"
 #. module: fleet
 #: model:ir.ui.menu,name:fleet.fleet_configuration
 msgid "Configuration"
-msgstr "Seadistus"
+msgstr "Seadistused"
 
 #. module: fleet
 #: selection:fleet.service.type,category:0
@@ -366,7 +367,7 @@ msgstr ""
 #. module: fleet
 #: model:ir.model.fields,field_description:fleet.field_fleet_vehicle_log_contract_ins_ref
 msgid "Contract Reference"
-msgstr ""
+msgstr "Lepingu viide"
 
 #. module: fleet
 #: model:ir.model.fields,field_description:fleet.field_fleet_vehicle_log_contract_start_date
@@ -377,7 +378,7 @@ msgstr ""
 #: model:ir.actions.act_window,name:fleet.fleet_vehicle_contract_types_action
 #: model:ir.ui.menu,name:fleet.fleet_vehicle_contract_types_menu
 msgid "Contract Types"
-msgstr ""
+msgstr "Lepingu tüübid"
 
 #. module: fleet
 #: model:ir.model.fields,help:fleet.field_fleet_vehicle_cost_contract_id
@@ -493,8 +494,8 @@ msgstr "Kulud kuus"
 #. module: fleet
 #: model:ir.model.fields,help:fleet.field_fleet_vehicle_log_contract_cost_generated
 msgid ""
-"Costs paid at regular intervals, depending on the cost frequency.If the cost"
-" frequency is set to unique, the cost will be logged at the start date"
+"Costs paid at regular intervals, depending on the cost frequency. If the "
+"cost frequency is set to unique, the cost will be logged at the start date"
 msgstr ""
 
 #. module: fleet
@@ -703,7 +704,7 @@ msgstr ""
 #: selection:fleet.vehicle.log.contract,state:0
 #: model:ir.ui.view,arch_db:fleet.fleet_vehicle_log_contract_view_search
 msgid "Expired"
-msgstr ""
+msgstr "Aegunud"
 
 #. module: fleet
 #: selection:fleet.vehicle.log.contract,state:0
