@@ -20,7 +20,11 @@ odoo.define('website_form.animation', function (require) {
             return $.when(this._super.apply(this, arguments), def);
         },
 
-        start: function () {
+        start: function (editable_mode) {
+            if (editable_mode) {
+                this.stop();
+                return;
+            }
             var self = this;
             this.templates_loaded = ajax.loadXML('/website_form/static/src/xml/website_form.xml', qweb);
             this.$target.find('.o_website_form_send').on('click',function (e) {self.send(e);});
@@ -58,7 +62,7 @@ odoo.define('website_form.animation', function (require) {
 
         send: function (e) {
             e.preventDefault();  // Prevent the default submit behavior
-            this.$target.find('.o_website_form_send').off();  // Prevent users from crazy clicking
+            this.$target.find('.o_website_form_send').off().addClass('disabled');  // Prevent users from crazy clicking
 
             var self = this;
 
@@ -70,12 +74,12 @@ odoo.define('website_form.animation', function (require) {
 
             // Prepare form inputs
             this.form_fields = this.$target.serializeArray();
-            _.each(this.$target.find('input[type=file]'), function (input) {
+            $.each(this.$target.find('input[type=file]'), function (outer_index, input) {
                 $.each($(input).prop('files'), function (index, file) {
                     // Index field name as ajax won't accept arrays of files
                     // when aggregating multiple files into a single field value
                     self.form_fields.push({
-                        name: input.name + '[' + index + ']',
+                        name: input.name + '[' + outer_index + '][' + index + ']',
                         value: file
                     });
                 });
@@ -231,7 +235,7 @@ odoo.define('website_form.animation', function (require) {
         update_status: function (status) {
             var self = this;
             if (status !== 'success') {  // Restore send button behavior if result is an error
-                this.$target.find('.o_website_form_send').on('click',function (e) {self.send(e);});
+                this.$target.find('.o_website_form_send').on('click',function (e) {self.send(e);}).removeClass('disabled');
             }
             var $result = this.$('#o_website_form_result');
             this.templates_loaded.done(function () {

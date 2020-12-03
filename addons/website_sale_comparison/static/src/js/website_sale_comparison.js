@@ -1,8 +1,9 @@
 odoo.define('website_sale_comparison.comparison', function (require) {
 "use strict";
 
-require('web.dom_ready')
+require('web.dom_ready');
 var ajax = require('web.ajax');
+var concurrency = require('web.concurrency');
 var core = require('web.core');
 var _t = core._t;
 var utils = require('web.utils');
@@ -26,6 +27,7 @@ var ProductComparison = Widget.extend({
     init: function(){
         this.comparelist_product_ids = JSON.parse(utils.get_cookie('comparelist_product_ids') || '[]');
         this.product_compare_limit = 4;
+        this.guard = new concurrency.Mutex();
     },
     start:function(){
         var self = this;
@@ -55,7 +57,14 @@ var ProductComparison = Widget.extend({
             if (self.comparelist_product_ids.length < self.product_compare_limit) {
                 var prod = $(this).data('product-product-id');
                 if (e.currentTarget.classList.contains('o_add_compare_dyn')) {
-                    prod = parseInt($(this).parent().find('.product_id').val());
+                    prod = $(this).parent().find('.product_id').val();
+                    if (!prod) { // case List View Variants
+                        prod = $(this).parent().find('input:checked').first().val();
+                    }
+                    prod = parseInt(prod, 10);
+                }
+                if (!prod) {
+                    return;
                 }
                 self.add_new_products(prod);
                 website_sale_utils.animate_clone($('#comparelist .o_product_panel_header'), $(this).closest('form'), -50, 10);
@@ -68,6 +77,12 @@ var ProductComparison = Widget.extend({
         $('body').on('click', '.comparator-popover .o_comparelist_products .o_remove', function (e){
             self.rm_from_comparelist(e);
         });
+        $('body').on('click', '.o_comparelist_remove', function (e){
+            self.rm_from_comparelist(e);
+            var new_link = '/shop/compare/?products=' + self.comparelist_product_ids.toString();
+            window.location = _.isEmpty(self.comparelist_product_ids) ? '/shop' : new_link;
+        });
+
         $("#o_comparelist_table tr").click(function(){
             $($(this).data('target')).children().slideToggle(100);
             $(this).find('.fa-chevron-circle-down, .fa-chevron-circle-right').toggleClass('fa-chevron-circle-down fa-chevron-circle-right');
@@ -100,6 +115,9 @@ var ProductComparison = Widget.extend({
         }
     },
     add_new_products:function(product_id){
+        this.guard.exec(this._add_new_products.bind(this, product_id));
+    },
+    _add_new_products: function (product_id) {
         var self = this;
         $('.o_product_feature_panel').show();
         if (!_.contains(self.comparelist_product_ids, product_id)) {
@@ -107,8 +125,9 @@ var ProductComparison = Widget.extend({
             if(_.has(self.product_data, product_id)){
                 self.update_content([product_id], false);
             } else {
-                self.load_products([product_id]).then(function(){
+                return self.load_products([product_id]).then(function () {
                     self.update_content([product_id], false);
+                    self.update_cookie();
                 });
             }
         }
@@ -126,6 +145,9 @@ var ProductComparison = Widget.extend({
         this.refresh_panel();
     },
     rm_from_comparelist: function(e){
+        this.guard.exec(this._rm_from_comparelist.bind(this, e));
+    },
+    _rm_from_comparelist: function (e) {
         this.comparelist_product_ids = _.without(this.comparelist_product_ids, $(e.currentTarget).data('product_product_id'));
         $(e.currentTarget).parents('.o_product_row').remove();
         this.update_cookie();

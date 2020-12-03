@@ -149,7 +149,16 @@ function make_message (data) {
     _.each(_.keys(emoji_substitutions), function (key) {
         var escaped_key = String(key).replace(/([.*+?=^!:${}()|[\]\/\\])/g, '\\$1');
         var regexp = new RegExp("(?:^|\\s|<[a-z]*>)(" + escaped_key + ")(?=\\s|$|</[a-z]*>)", "g");
+        var msg_bak = msg.body;
         msg.body = msg.body.replace(regexp, ' <span class="o_mail_emoji">'+emoji_substitutions[key]+'</span> ');
+
+        // Idiot-proof limit. If the user had the amazing idea of copy-pasting thousands of emojis,
+        // the image rendering can lead to memory overflow errors on some browsers (e.g. Chrome).
+        // Set an arbitrary limit to 200 from which we simply don't replace them (anyway, they are
+        // already replaced by the unicode counterpart).
+        if (_.str.count(msg.body, 'o_mail_emoji') > 200) {
+            msg.body = msg_bak;
+        }
     });
 
     function property_descr(channel) {
@@ -468,13 +477,13 @@ function on_partner_notification (data) {
         if (channel) {
             var msg;
             if (_.contains(['public', 'private'], channel.type)) {
-                msg = _.str.sprintf(_t('You unsubscribed from <b>%s</b>.'), channel.name);
+                msg = _.str.sprintf(_t('You unsubscribed from <b>%s</b>.'), _.escape(channel.name));
             } else {
-                msg = _.str.sprintf(_t('You unpinned your conversation with <b>%s</b>.'), channel.name);
+                msg = _.str.sprintf(_t('You unpinned your conversation with <b>%s</b>.'), _.escape(channel.name));
             }
             remove_channel(channel);
             chat_manager.bus.trigger("unsubscribe_from_channel", data.id);
-            web_client.do_notify(_("Unsubscribed"), msg);
+            web_client.do_notify(_t("Unsubscribed"), msg);
         }
     } else if (data.type === 'toggle_star') {
         on_toggle_star_notification(data);
@@ -576,7 +585,7 @@ function on_chat_session_notification (chat_session) {
     if ((chat_session.channel_type === "channel") && (chat_session.state === "open")) {
         add_channel(chat_session, {autoswitch: false});
         if (!chat_session.is_minimized && chat_session.info !== 'creation') {
-            web_client.do_notify(_t("Invitation"), _t("You have been invited to: ") + chat_session.name);
+            web_client.do_notify(_t("Invitation"), _.str.sprintf(_t("You have been invited to: %s"), _.escape(chat_session.name)));
         }
     }
     // partner specific change (open a detached window for example)
@@ -626,7 +635,7 @@ var ChatManager =  Class.extend(Mixins.EventDispatcherMixin, ServicesMixin, {
         Mixins.EventDispatcherMixin.init.call(this);
         this.setParent(parent);
 
-        this.bus = new Bus();
+        this.bus = new Bus(this);
         this.bus.on('client_action_open', null, function (open) {
             client_action_open = open;
         });
@@ -854,7 +863,9 @@ var ChatManager =  Class.extend(Mixins.EventDispatcherMixin, ServicesMixin, {
         if ('ids' in options) {
             // get messages from their ids (chatter is the main use case)
             return this._fetchDocumentMessages(options.ids, options).then(function(result) {
-                chat_manager.mark_as_read(options.ids);
+                if (options.shouldMarkAsRead) { // DO NOT FORWARD-PORT
+                    chat_manager.mark_as_read(options.ids); // DO NOT FORWARD-PORT
+                } // DO NOT FORWARD-PORT
                 return result;
             });
         }

@@ -27,6 +27,8 @@ class TestFloatPrecision(TransactionCase):
         try_round(0.0049,'0.00')   # 0.0049 is closer to 0 than to 0.01, so should round down
         try_round(0.005,'0.01')   # the rule is to round half away from zero
         try_round(-0.005,'-0.01') # the rule is to round half away from zero
+        try_round(6.6 * 0.175, '1.16') # 6.6 * 0.175 is rounded to 1.15 with epsilon = 53
+        try_round(-6.6 * 0.175, '-1.16')
 
         def try_zero(amount, expected):
             self.assertEqual(currency.is_zero(amount), expected,
@@ -203,3 +205,12 @@ class TestFloatPrecision(TransactionCase):
 
         with self.assertRaises(AssertionError):
             float_round(0.01, precision_digits=3, precision_rounding=0.01)
+
+    def test_amount_to_text_10(self):
+        """ verify that amount_to_text works as expected """
+        currency = self.env.ref('base.EUR')
+
+        amount_target = currency.amount_to_text(0.29)
+        amount_test = currency.amount_to_text(0.28)
+        self.assertNotEqual(amount_test, amount_target,
+                            "Amount in text should not depend on float representation")

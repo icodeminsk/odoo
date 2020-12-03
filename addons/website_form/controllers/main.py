@@ -7,6 +7,7 @@ import pytz
 
 from datetime import datetime
 from psycopg2 import IntegrityError
+from werkzeug.exceptions import BadRequest
 
 from odoo import http
 from odoo.http import request
@@ -19,8 +20,16 @@ from odoo.addons.base.ir.ir_qweb.fields import nl2br
 class WebsiteForm(http.Controller):
 
     # Check and insert values from the form on the model <model>
-    @http.route('/website_form/<string:model_name>', type='http', auth="public", methods=['POST'], website=True)
+    @http.route('/website_form/<string:model_name>', type='http', auth="public", methods=['POST'], website=True, csrf=False)
     def website_form(self, model_name, **kwargs):
+        # Partial CSRF check, only performed when session is authenticated, as there
+        # is no real risk for unauthenticated sessions here. It's a common case for
+        # embedded forms now: SameSite policy rejects the cookies, so the session
+        # is lost, and the CSRF check fails, breaking the post for no good reason.
+        csrf_token = request.params.pop('csrf_token', None)
+        if request.session.uid and not request.validate_csrf(csrf_token):
+            raise BadRequest('Session expired (invalid CSRF token)')
+
         model_record = request.env['ir.model'].sudo().search([('model', '=', model_name), ('website_form_access', '=', True)])
         if not model_record:
             return json.dumps(False)
@@ -112,22 +121,24 @@ class WebsiteForm(http.Controller):
             'record': {},        # Values to create record
             'attachments': [],  # Attached files
             'custom': '',        # Custom fields values
+            'meta': '',         # Add metadata if enabled
         }
 
         authorized_fields = model.sudo()._get_form_writable_fields()
         error_fields = []
-
+        custom_fields = []
 
         for field_name, field_value in values.items():
             # If the value of the field if a file
             if hasattr(field_value, 'filename'):
                 # Undo file upload field name indexing
-                field_name = field_name.rsplit('[', 1)[0]
+                field_name = field_name.split('[', 1)[0]
 
                 # If it's an actual binary field, convert the input file
                 # If it's not, we'll use attachments instead
                 if field_name in authorized_fields and authorized_fields[field_name]['type'] == 'binary':
                     data['record'][field_name] = base64.b64encode(field_value.read())
+                    field_value.stream.seek(0) # do not consume value forever
                 else:
                     field_value.field_name = field_name
                     data['attachments'].append(field_value)
@@ -142,7 +153,9 @@ class WebsiteForm(http.Controller):
 
             # If it's a custom field
             elif field_name != 'context':
-                data['custom'] += u"%s : %s\n" % (field_name, field_value)
+                custom_fields.append((field_name, field_value))
+
+        data['custom'] = "\n".join([u"%s : %s" % v for v in custom_fields])
 
         # Add metadata if enabled
         environ = request.httprequest.headers.environ
@@ -171,7 +184,8 @@ class WebsiteForm(http.Controller):
         return data
 
     def insert_record(self, request, model, values, custom, meta=None):
-        record = request.env[model.model].sudo().with_context(mail_create_nosubscribe=True).create(values)
+        model_name = model.sudo().model
+        record = request.env[model_name].sudo().with_context(mail_create_nosubscribe=True).create(values)
 
         if custom or meta:
             default_field = model.website_form_default_field_id
@@ -183,13 +197,13 @@ class WebsiteForm(http.Controller):
             # If there is a default field configured for this model, use it.
             # If there isn't, put the custom data in a message instead
             if default_field.name:
-                if default_field.ttype == 'html' or model.model == 'mail.mail':
+                if default_field.ttype == 'html' or model_name == 'mail.mail':
                     custom_content = nl2br(custom_content)
                 record.update({default_field.name: custom_content})
             else:
                 values = {
                     'body': nl2br(custom_content),
-                    'model': model.model,
+                    'model': model_name,
                     'message_type': 'comment',
                     'no_auto_thread': False,
                     'res_id': record.id,
@@ -201,7 +215,8 @@ class WebsiteForm(http.Controller):
     # Link all files attached on the form
     def insert_attachment(self, model, id_record, files):
         orphan_attachment_ids = []
-        record = model.env[model.model].browse(id_record)
+        model_name = model.sudo().model
+        record = model.env[model_name].browse(id_record)
         authorized_fields = model.sudo()._get_form_writable_fields()
         for file in files:
             custom_field = file.field_name not in authorized_fields
@@ -209,7 +224,7 @@ class WebsiteForm(http.Controller):
                 'name': file.field_name if custom_field else file.filename,
                 'datas': base64.encodestring(file.read()),
                 'datas_fname': file.filename,
-                'res_model': model.model,
+                'res_model': model_name,
                 'res_id': record.id,
             }
             attachment_id = request.env['ir.attachment'].sudo().create(attachment_value)
@@ -218,13 +233,13 @@ class WebsiteForm(http.Controller):
             else:
                 orphan_attachment_ids.append(attachment_id.id)
 
-        # If some attachments didn't match a field on the model,
-        # we create a mail.message to link them to the record
-        if orphan_attachment_ids:
-            if model.model != 'mail.mail':
+        if model_name != 'mail.mail':
+            # If some attachments didn't match a field on the model,
+            # we create a mail.message to link them to the record
+            if orphan_attachment_ids:
                 values = {
                     'body': _('<p>Attached files : </p>'),
-                    'model': model.model,
+                    'model': model_name,
                     'message_type': 'comment',
                     'no_auto_thread': False,
                     'res_id': id_record,

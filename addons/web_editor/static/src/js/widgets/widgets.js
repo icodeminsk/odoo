@@ -4,6 +4,7 @@ odoo.define('web_editor.widget', function (require) {
 var core = require('web.core');
 var Dialog = require('web.Dialog');
 var Widget = require('web.Widget');
+var utils = require('web.utils');
 var weContext = require("web_editor.context");
 
 var QWeb = core.qweb;
@@ -110,7 +111,8 @@ var ImageDialog = Widget.extend({
         'change input.url': "change_input",
         'keyup input.url': "change_input",
         'click .existing-attachments [data-src]': 'select_existing',
-        'dblclick .existing-attachments [data-src]': function () {
+        'dblclick .existing-attachments [data-src]': function (e) {
+            this.select_existing(e, true);
             this.getParent().save();
         },
         'click .o_existing_attachment_remove': 'try_remove',
@@ -120,12 +122,24 @@ var ImageDialog = Widget.extend({
         this._super.apply(this, arguments);
         this.options = options || {};
         this.accept = this.options.accept || this.options.document ? "*/*" : "image/*";
-        this.domain = this.options.domain || ['|', ['mimetype', '=', false], ['mimetype', this.options.document ? 'not in' : 'in', ['image/gif', 'image/jpe', 'image/jpeg', 'image/jpg', 'image/gif', 'image/png']]];
+        if (options.domain) {
+            this.domain = typeof options.domain === 'function' ? options.domain() : options.domain;
+        } else if (options.res_id) {
+            this.domain = ['|',
+                '&', ['res_model', '=', options.res_model], ['res_id', '=', options.res_id],
+                ['res_model', '=', 'ir.ui.view']];
+        } else {
+            this.domain = [['res_model', '=', 'ir.ui.view']];
+        }
         this.parent = parent;
         this.old_media = media;
         this.media = media;
         this.images = [];
         this.page = 0;
+        this.lastLoadedPage = -1;
+        this.records = [];
+        this.needle = '';
+        this.perPage = this.IMAGES_PER_ROW * this.IMAGES_ROWS;
     },
     start: function () {
         this.$preview = this.$('.preview-container').detach();
@@ -149,20 +163,26 @@ var ImageDialog = Widget.extend({
                 return;
             }
             self.page += $target.hasClass('previous') ? -1 : 1;
+            if (self.page > self.lastLoadedPage) {
+                return self.fetchPage(self.page);
+            }
             self.display_attachments();
         });
         this.fetch_existing().then(function () {
             if (o.url) {
-                self.set_image(_.find(self.records, function (record) { return record.url === o.url;}) || o);
+                self.push(_.find(self.records, function (record) { return record.url === o.url;}) || o);
+                self.display_attachments();
             }
         });
         return res;
     },
-    push: function (attachment) {
+    push: function (attachment, force_select) {
         if (this.options.select_images) {
             var img = _.select(this.images, function (v) { return v.id === attachment.id; });
             if (img.length) {
-                this.images.splice(this.images.indexOf(img[0]),1);
+                if (!force_select) {
+                  this.images.splice(this.images.indexOf(img[0]),1);
+                }
             } else {
                 this.images.push(attachment);
             }
@@ -171,44 +191,70 @@ var ImageDialog = Widget.extend({
         }
     },
     save: function () {
+        var self = this;
         if (this.options.select_images) {
             return this.images;
         }
 
         var img = this.images[0];
         if (!img) {
-            var id = this.$(".existing-attachments [data-src]:first").data('id');
-            img = _.find(this.images, function (img) { return img.id === id;});
+            return this.media;
         }
 
-        var media;
-        if (!img.is_document) {
-            if (this.media.tagName !== "IMG" || !this.old_media) {
-                this.add_class = "pull-left";
-                this.style = {"width": "100%"};
-            }
-            if (this.media.tagName !== "IMG") {
-                media = document.createElement('img');
-                $(this.media).replaceWith(media);
-                this.media = media;
-            }
-            this.media.setAttribute('src', img.src);
-        } else {
-            if (this.media.tagName !== "A") {
-                $('.note-control-selection').hide();
-                media = document.createElement('a');
-                $(this.media).replaceWith(media);
-                this.media = media;
-            }
-            this.media.setAttribute('href', '/web/content/' + img.id + '?unique=' + img.checksum + '&download=true');
-            $(this.media).addClass('o_image').attr('title', img.name).attr('data-mimetype', img.mimetype);
+        var def = $.when();
+        if (!img.access_token) {
+            def = this._rpc({
+                model: 'ir.attachment',
+                method: 'generate_access_token',
+                args: [[img.id]]
+            }).then(function (access_token) {
+                img.access_token = access_token[0];
+            });
         }
 
-        $(this.media).attr('alt', img.alt);
-        var style = this.style;
-        if (style) { $(this.media).css(style); }
+        return def.then(function () {
+            var media;
+            if (!img.is_document) {
+                if (img.access_token && self.options.res_model !== 'ir.ui.view') {
+                    img.src += _.str.sprintf('?access_token=%s', img.access_token);
+                }
+                if (self.media.tagName !== "IMG" || !self.old_media) {
+                    self.add_class = "pull-left";
+                    self.style = {"width": "100%"};
+                }
+                if (self.media.tagName !== "IMG") {
+                    media = document.createElement('img');
+                    $(self.media).replaceWith(media);
+                    self.media = media;
+                }
+                self.media.setAttribute('src', img.src);
+            } else {
+                if (self.media.tagName !== "A") {
+                    $('.note-control-selection').hide();
+                    media = document.createElement('a');
+                    $(self.media).replaceWith(media);
+                    self.media = media;
+                }
+                var href = '/web/content/' + img.id + '?';
+                if (img.access_token && self.options.res_model !== 'ir.ui.view') {
+                    href += _.str.sprintf('access_token=%s&', img.access_token);
+                }
+                href += 'unique=' + img.checksum + '&download=true';
+                self.media.setAttribute('href', href);
+                $(self.media).addClass('o_image').attr('title', img.name).attr('data-mimetype', img.mimetype);
+            }
 
-        return this.media;
+            $(self.media).attr('alt', img.alt);
+            var style = self.style;
+            if (style) { $(self.media).css(style); }
+
+            if (self.options.onUpload) {
+                // We consider that when selecting an image it is as if we upload it in the html content.
+                self.options.onUpload([img]);
+            }
+
+            return self.media;
+        });
     },
     clear: function () {
         this.media.className = this.media.className.replace(/(^|\s+)((img(\s|$)|img-(?!circle|rounded|thumbnail))[^\s]*)/g, ' ');
@@ -248,7 +294,7 @@ var ImageDialog = Widget.extend({
             $form.find('.well > span').remove();
             $form.find('.well > div').show();
             _.each(attachments, function (record) {
-                record.src = record.url || '/web/image/' + record.id;
+                record.src = record.url || _.str.sprintf('/web/image/%s/%s', record.id, encodeURI(record.name)); // Name is added for SEO purposes
                 record.is_document = !(/gif|jpe|jpg|png/.test(record.mimetype));
             });
             if (error || !attachments.length) {
@@ -257,6 +303,10 @@ var ImageDialog = Widget.extend({
             self.images = attachments;
             for (var i=0; i<attachments.length; i++) {
                 self.file_selected(attachments[i], error);
+            }
+
+            if (self.options.onUpload) {
+                self.options.onUpload(attachments);
             }
         };
     },
@@ -282,43 +332,68 @@ var ImageDialog = Widget.extend({
         }
     },
     fetch_existing: function (needle) {
-        var domain = [['res_model', '=', 'ir.ui.view']].concat(this.domain);
-        if (needle && needle.length) {
-            domain.push('|', ['datas_fname', 'ilike', needle], ['name', 'ilike', needle]);
+        this.records.splice(0);
+        this.page = 0;
+        this.lastLoadedPage = 0;
+        this.needle = needle;
+        return this.fetchPage(0);
+    },
+    fetchPage: function (pageNum) {
+        var domain = this.domain.concat([
+            '|',
+            ['type', '=like', 'binary'],
+            ['url', '!=', false],
+            '|',
+            ['mimetype', '=', false],
+            ['mimetype', this.options.document ? 'not in' : 'in', ['image/gif', 'image/jpe', 'image/jpeg', 'image/jpg', 'image/gif', 'image/png']],
+        ]);
+        if (this.needle && this.needle.length) {
+            domain.push('|', ['datas_fname', 'ilike', this.needle], ['name', 'ilike', this.needle]);
         }
+        var self = this;
         return this._rpc({
             model: 'ir.attachment',
             method: 'search_read',
             args: [],
             kwargs: {
                 domain: domain,
-                fields: ['name', 'mimetype', 'checksum', 'url', 'type'],
+                fields: ['name', 'mimetype', 'checksum', 'url', 'type', 'res_id', 'res_model', 'access_token'],
                 order: [{name: 'id', asc: false}],
                 context: weContext.get(),
+                // Try to fetch first record of next page just to know whether there is a next page.
+                limit: this.perPage + 1,
+                offset: pageNum * this.perPage,
             }
-        }).then(this.proxy('fetched_existing'));
-    },
-    fetched_existing: function (records) {
-        this.records = _.uniq(_.filter(records, function (r) {
-            return (r.type === "binary" || r.url && r.url.length > 0);
-        }), function (r) {
-            return (r.url || r.id);
+        }).then(function (records) {
+            self.lastLoadedPage = pageNum;
+            self.fetched_existing(records, pageNum);
         });
+    },
+    fetched_existing: function (records, pageNum) {
+        if (typeof pageNum !== 'number') {
+            this.records = _.uniq(_.filter(records, function (r) {
+                return (r.type === "binary" || r.url && r.url.length > 0);
+            }), function (r) {
+                return (r.url || r.id);
+            });
+        } else {
+            this.records = this.records.slice();
+            Array.prototype.splice.apply(this.records, [pageNum * this.perPage, records.length].concat(records));
+        }
         _.each(this.records, function (record) {
-            record.src = record.url || _.str.sprintf('/web/image/%s/%s', record.id, record.name); // Name is added for SEO purposes
+            record.src = record.url || _.str.sprintf('/web/image/%s/%s', record.id, encodeURI(record.name)); // Name is added for SEO purposes
             record.is_document = !(/gif|jpe|jpg|png/.test(record.mimetype));
         });
         this.display_attachments();
     },
     display_attachments: function () {
         var self = this;
-        var per_screen = this.IMAGES_PER_ROW * this.IMAGES_ROWS;
-        var from = this.page * per_screen;
+        var from = this.page * this.perPage;
         var records = this.records;
 
         // Create rows of 3 records
         var rows = _(records).chain()
-            .slice(from, from + per_screen)
+            .slice(from, from + this.perPage)
             .groupBy(function (_, index) { return Math.floor(index / self.IMAGES_PER_ROW); })
             .values()
             .value();
@@ -328,7 +403,7 @@ var ImageDialog = Widget.extend({
         this.$('.existing-attachments').replaceWith(QWeb.render('web_editor.dialog.image.existing.content', {rows: rows}));
         this.parent.$('.pager')
             .find('li.previous a').toggleClass('disabled', (from === 0)).end()
-            .find('li.next a').toggleClass('disabled', (from + per_screen >= records.length));
+            .find('li.next a').toggleClass('disabled', (from + this.perPage >= records.length));
 
         this.$el.find('.o_image').each(function () {
             var $div = $(this);
@@ -339,10 +414,10 @@ var ImageDialog = Widget.extend({
         });
         this.selected_existing();
     },
-    select_existing: function (e) {
+    select_existing: function (e, force_select) {
         var $img = $(e.currentTarget);
         var attachment = _.find(this.records, function (record) { return record.id === $img.data('id'); });
-        this.push(attachment);
+        this.push(attachment, force_select);
         this.selected_existing();
     },
     selected_existing: function () {
@@ -407,16 +482,12 @@ var getCssSelectors = function (filter) {
     var sheets = document.styleSheets;
     for (var i = 0; i < sheets.length; i++) {
         var rules;
-        if (sheets[i].rules) {
-            rules = sheets[i].rules;
-        } else {
-            //try...catch because Firefox not able to enumerate document.styleSheets[].cssRules[] for cross-domain stylesheets.
-            try {
-                rules = sheets[i].cssRules;
-            } catch (e) {
-                console.warn("Can't read the css rules of: " + sheets[i].href, e);
-                continue;
-            }
+        // try...catch because browser may not able to enumerate rules for cross-domain stylesheets
+        try {
+            rules = sheets[i].rules || sheets[i].cssRules;
+        } catch(e) {
+            console.warn("Can't read the css rules of: " + sheets[i].href, e);
+            continue;
         }
         if (rules) {
             for (var r = 0; r < rules.length; r++) {
@@ -686,7 +757,7 @@ var VideoDialog = Widget.extend({
                 '<div class="media_iframe_video" data-oe-expression="' + this.$content.attr('src') + '">'+
                     '<div class="css_editable_mode_display">&nbsp;</div>'+
                     '<div class="media_iframe_video_size" contenteditable="false">&nbsp;</div>'+
-                    '<iframe src="' + this.$content.attr('src') + '" frameborder="0" contenteditable="false"></iframe>'+
+                    '<iframe src="' + this.$content.attr('src') + '" frameborder="0" contenteditable="false" allowfullscreen="allowfullscreen"></iframe>'+
                 '</div>'
             );
             $(this.media).replaceWith($content);
@@ -732,7 +803,7 @@ var VideoDialog = Widget.extend({
         options = options || {};
 
         // Video url patterns(youtube, instagram, vimeo, dailymotion, youku, ...)
-        var ytRegExp = /^(?:(?:https?:)?\/\/)?(?:www\.)?(?:youtu\.be\/|youtube\.com\/(?:embed\/|v\/|watch\?v=|watch\?.+&v=))((\w|-){11})(?:\S+)?$/;
+        var ytRegExp = /^(?:(?:https?:)?\/\/)?(?:www\.)?(?:youtu\.be\/|youtube(-nocookie)?\.com\/(?:embed\/|v\/|watch\?v=|watch\?.+&v=))((?:\w|-){11})(?:\S+)?$/;
         var ytMatch = url.match(ytRegExp);
 
         var insRegExp = /(.*)instagram.com\/p\/(.[a-zA-Z0-9]*)/;
@@ -744,7 +815,7 @@ var VideoDialog = Widget.extend({
         var vimRegExp = /\/\/(player.)?vimeo.com\/([a-z]*\/)*([0-9]{6,11})[?]?.*/;
         var vimMatch = url.match(vimRegExp);
 
-        var dmRegExp = /.+dailymotion.com\/(video|hub|embed)\/([^_]+)[^#]*(#video=([^_&]+))?/;
+        var dmRegExp = /.+dailymotion.com\/(video|hub|embed)\/([^_?]+)[^#]*(#video=([^_&]+))?/;
         var dmMatch = url.match(dmRegExp);
 
         var ykuRegExp = /(.*).youku\.com\/(v_show\/id_|embed\/)(.+)/;
@@ -757,10 +828,10 @@ var VideoDialog = Widget.extend({
             return {errorCode: 0};
         }
 
-        var autoplay = options.autoplay ? '?autoplay=1' : '?autoplay=0';
+        var autoplay = options.autoplay ? '?autoplay=1&mute=1' : '?autoplay=0';
 
-        if (ytMatch && ytMatch[1].length === 11) {
-            $video.attr('src', '//www.youtube.com/embed/' + ytMatch[1] + autoplay);
+        if (ytMatch && ytMatch[2].length === 11) {
+            $video.attr('src', '//www.youtube' + (ytMatch[1] || '') + '.com/embed/' + ytMatch[2] + autoplay);
         } else if (insMatch && insMatch[2].length) {
             $video.attr('src', '//www.instagram.com/p/' + insMatch[2] + '/embed/');
             videoType = 'ins';
@@ -768,7 +839,7 @@ var VideoDialog = Widget.extend({
             $video.attr('src', vinMatch[0] + '/embed/simple');
             videoType = 'vin';
         } else if (vimMatch && vimMatch[3].length) {
-            $video.attr('src', '//player.vimeo.com/video/' + vimMatch[3] + autoplay);
+            $video.attr('src', '//player.vimeo.com/video/' + vimMatch[3] + autoplay.replace('mute', 'muted'));
             videoType = 'vim';
         } else if (dmMatch && dmMatch[2].length) {
             var just_id = dmMatch[2].replace('video/','');
@@ -782,8 +853,12 @@ var VideoDialog = Widget.extend({
             return {errorCode: 1};
         }
 
+        if (ytMatch) {
+            $video.attr('src', $video.attr('src') + '&rel=0');
+        }
         if (options.loop && (ytMatch || vimMatch)) {
-            $video.attr('src', $video.attr('src') + '&loop=1');
+            var videoSrc = _.str.sprintf('%s&loop=1', $video.attr('src'));
+            $video.attr('src', ytMatch ? _.str.sprintf('%s&playlist=%s', videoSrc, ytMatch[2]) : videoSrc);
         }
         if (options.hide_controls && (ytMatch || dmMatch)) {
             $video.attr('src', $video.attr('src') + '&controls=0');
@@ -945,10 +1020,14 @@ var MediaDialog = Dialog.extend({
 
         this.$modal.addClass('note-image-dialog');
         this.$modal.find('.modal-dialog').addClass('o_select_media_dialog');
-
+        // DO NOT FORWARD PORT
+        this.mailCompose = this.options.res_model === "mail.compose.message";
         this.only_images = this.options.only_images || this.options.select_images || (this.media && ($(this.media).parent().data("oe-field") === "image" || $(this.media).parent().data("oe-type") === "image"));
+        if (this.only_images || this.mailCompose) {
+            this.$('[href="#editor-media-video"]').addClass('hidden');
+        }
         if (this.only_images) {
-            this.$('[href="#editor-media-document"], [href="#editor-media-video"], [href="#editor-media-icon"]').addClass('hidden');
+            this.$('[href="#editor-media-document"], [href="#editor-media-icon"]').addClass('hidden');
         }
 
         this.opened((function () {
@@ -975,8 +1054,10 @@ var MediaDialog = Dialog.extend({
         if (!this.only_images) {
             this.iconDialog = new fontIconsDialog(this, this.media, this.options);
             this.iconDialog.appendTo(this.$("#editor-media-icon"));
-            this.videoDialog = new VideoDialog(this, this.media, this.options);
-            this.videoDialog.appendTo(this.$("#editor-media-video"));
+            if (!this.mailCompose) {
+                this.videoDialog = new VideoDialog(this, this.media, this.options);
+                this.videoDialog.appendTo(this.$("#editor-media-video"));
+            }
         }
 
         this.active = this.imageDialog;
@@ -985,9 +1066,11 @@ var MediaDialog = Dialog.extend({
             if ($(event.target).is('[href="#editor-media-image"]')) {
                 self.active = self.imageDialog;
                 self.$('li.search, li.previous, li.next').removeClass("hidden");
+                self.imageDialog.display_attachments();
             } else if ($(event.target).is('[href="#editor-media-document"]')) {
                 self.active = self.documentDialog;
                 self.$('li.search, li.previous, li.next').removeClass("hidden");
+                self.documentDialog.display_attachments();
             } else if ($(event.target).is('[href="#editor-media-icon"]')) {
                 self.active = self.iconDialog;
                 self.$('li.search, li.previous, li.next').removeClass("hidden");
@@ -1001,18 +1084,21 @@ var MediaDialog = Dialog.extend({
         return this._super.apply(this, arguments);
     },
     save: function () {
+        var self = this;
+        var args = arguments;
+        var _super = this._super;
         if (this.options.select_images) {
-            this.final_data = this.active.save();
-            this._super.apply(this, arguments);
-            return;
+            return $.when(this.active.save()).then(function (data) {
+                self.final_data = data;
+                return _super.apply(self, args);
+            });
         }
         if (this.rte) {
             this.range.select();
             this.rte.historyRecordUndo(this.media);
         }
 
-        var self = this;
-        if (self.media) {
+        if (this.media) {
             this.media.innerHTML = "";
             if (this.active !== this.imageDialog && this.active !== this.documentDialog) {
                 this.imageDialog.clear();
@@ -1029,27 +1115,27 @@ var MediaDialog = Dialog.extend({
             this.range.insertNode(this.media, true);
             this.active.media = this.media;
         }
-        this.active.save();
 
-        if (this.active.add_class) {
-            $(this.active.media).addClass(this.active.add_class);
-        }
-        var media = this.active.media;
+        return $.when(this.active.save()).then(function () {
+            if (self.active.add_class) {
+                $(self.active.media).addClass(self.active.add_class);
+            }
+            var media = self.active.media;
 
-        this.final_data = [media, self.old_media];
-        $(document.body).trigger("media-saved", this.final_data);
-        $(self.old_media).trigger("save", this.final_data);
-        $(this.final_data).trigger('input');
+            self.final_data = [media, self.old_media];
+            $(document.body).trigger("media-saved", self.final_data);
+            $(self.old_media).trigger("save", self.final_data);
+            $(self.final_data).trigger('input');
 
-        // Update editor bar after image edition (in case the image change to icon or other)
-        _.defer(function () {
-            if (!media.parentNode) return;
-            range.createFromNode(media).select();
-            click_event(media, "mousedown");
-            click_event(media, "mouseup");
+            // Update editor bar after image edition (in case the image change to icon or other)
+            _.defer(function () {
+                if (!media.parentNode) return;
+                range.createFromNode(media).select();
+                click_event(media, "mousedown");
+                click_event(media, "mouseup");
+            });
+            return _super.apply(self, args);
         });
-
-        this._super.apply(this, arguments);
     },
     searchTimer: null,
     search: function () {
@@ -1139,6 +1225,7 @@ var LinkDialog = Dialog.extend({
                 }
 
                 this.data.range = range.create(sc, so, ec, eo);
+                $(editable).data("range", this.data.range);
                 this.data.range.select();
             } else {
                 nodes = dom.ancestor(sc, dom.isAnchor).childNodes;
@@ -1154,6 +1241,8 @@ var LinkDialog = Dialog.extend({
                     if (dom.ancestor(nodes[i], dom.isImg)) {
                         this.data.images.push(dom.ancestor(nodes[i], dom.isImg));
                         text += '[IMG]';
+                    } else if (!is_link && nodes[i].nodeType === 1) {
+                        // just use text nodes from listBetween
                     } else if (!is_link && i===0) {
                         text += nodes[i].textContent.slice(so, Infinity);
                     } else if (!is_link && i===nodes.length-1) {
@@ -1181,6 +1270,7 @@ var LinkDialog = Dialog.extend({
         if (!$e.length) {
             $e = this.$('input.url-source:first');
         }
+        $e.closest('.form-group').removeClass('has-error');
         var val = $e.val();
         var label = this.$('#o_link_dialog_label_input').val() || val;
 
@@ -1201,8 +1291,7 @@ var LinkDialog = Dialog.extend({
         var size = this.$("select.link-style").val() || '';
         var classes = (this.data.className || "") + (style && style.length ? " btn " : "") + style + " " + size;
         var isNewWindow = this.$('input.window-new').prop('checked');
-
-        if ($e.hasClass('email-address') && $e.val().indexOf("@") !== -1) {
+        if ($e.hasClass('email-address') && (_.str.startsWith(val, 'mailto:') || (val.indexOf("@") !== -1 && !_.str.startsWith(val, 'http') && !_.str.startsWith(val, 'www')))) {
             self.get_data_buy_mail(def, $e, isNewWindow, label, classes, test);
         } else {
             self.get_data_buy_url(def, $e, isNewWindow, label, classes, test);
@@ -1211,7 +1300,13 @@ var LinkDialog = Dialog.extend({
     },
     get_data_buy_mail: function (def, $e, isNewWindow, label, classes, test) {
         var val = $e.val();
-        def.resolve(val.indexOf("mailto:") === 0 ? val : 'mailto:' + val, isNewWindow, label, classes);
+        if (utils.is_email(val, true)) {
+            def.resolve(val.indexOf("mailto:") === 0 ? val : 'mailto:' + val, isNewWindow, label, classes);
+        } else {
+            $e.closest('.form-group').addClass('has-error');
+            $e.focus();
+            def.reject();
+        }
     },
     get_data_buy_url: function (def, $e, isNewWindow, label, classes, test) {
         def.resolve($e.val(), isNewWindow, label, classes);
@@ -1259,6 +1354,7 @@ var LinkDialog = Dialog.extend({
                 this.$('input.email-address').val(match = /mailto:(.+)/.exec(href) ? match[1] : '');
             } else {
                 this.$('input.url').val(href);
+                this.$('input.window-new').closest("div").show();
             }
         }
         this.preview();
@@ -1295,5 +1391,9 @@ return {
     getCssSelectors: getCssSelectors,
     fontIcons: fontIcons,
     computeFonts: computeFonts,
+    click_event: click_event,
+    fontIconsDialog: fontIconsDialog,
+    ImageDialog: ImageDialog,
+    VideoDialog: VideoDialog,
 };
 });

@@ -126,7 +126,8 @@ class Employee(models.Model):
     ], groups="hr.group_hr_user", default="male")
     marital = fields.Selection([
         ('single', 'Single'),
-        ('married', 'Married (or similar)'),
+        ('married', 'Married'),
+        ('cohabitant', 'Legal Cohabitant'),
         ('widower', 'Widower'),
         ('divorced', 'Divorced')
     ], string='Marital Status', groups="hr.group_hr_user", default='single')
@@ -294,6 +295,10 @@ class Department(models.Model):
     jobs_ids = fields.One2many('hr.job', 'department_id', string='Jobs')
     note = fields.Text('Note')
     color = fields.Integer('Color Index')
+
+    @api.model
+    def name_create(self, name):
+        return self.create({'name': name}).name_get()[0]
 
     @api.depends('name', 'parent_id.complete_name')
     def _compute_complete_name(self):

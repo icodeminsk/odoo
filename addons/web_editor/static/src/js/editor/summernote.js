@@ -913,15 +913,21 @@ range.WrappedRange.prototype.deleteContents = function (towrite) {
         return this;
     }
 
-    var prevBP = dom.removeBetween(this.sc, this.so, this.ec, this.eo, towrite);
+    var r;
+    var image = this.isOnImg();
+    if (image) {
+        // If the range matches/is in an image, then the image is to be removed
+        // and the cursor moved to its previous position
+        var parentNode = image.parentNode;
+        var index = _.indexOf(parentNode.childNodes, image);
+        parentNode.removeChild(image);
+        r = new range.WrappedRange(parentNode, index, parentNode, index);
+    } else {
+        r = dom.removeBetween(this.sc, this.so, this.ec, this.eo, towrite);
+    }
 
-    $(dom.node(prevBP.sc)).trigger("click"); // trigger click to disable and reanable editor and image handler
-    return new range.WrappedRange(
-      prevBP.sc,
-      prevBP.so,
-      prevBP.ec,
-      prevBP.eo
-    );
+    $(dom.node(r.sc)).trigger("click"); // trigger click to disable and reanable editor and image handler
+    return new range.WrappedRange(r.sc, r.so, r.ec, r.eo);
 };
 range.WrappedRange.prototype.clean = function (mergeFilter, all) {
     var node = dom.node(this.sc === this.ec ? this.sc : this.commonAncestor());
@@ -1069,7 +1075,14 @@ $.summernote.pluginEvents.untab = function (event, editor, layoutInfo) {
 $.summernote.pluginEvents.up = function (event, editor, layoutInfo) {
     var r = range.create();
     var node = dom.firstChild(r.sc.childNodes[r.so] || r.sc);
-    if (!r.isOnCell() || (!dom.isCell(node) && dom.hasContentBefore(node) && (!dom.isBR(dom.hasContentBefore(node)) || !dom.isText(node) || dom.isVisibleText(node) || dom.hasContentBefore(dom.hasContentBefore(node))))) {
+    if (!r.isOnCell()) {
+        return;
+    }
+    // check if an ancestor between node and cell has content before
+    var ancestor = dom.ancestor(node, function (ancestorNode) {
+        return dom.hasContentBefore(ancestorNode) || dom.isCell(ancestorNode);
+    });
+    if (!dom.isCell(ancestor) && (!dom.isBR(dom.hasContentBefore(ancestor)) || !dom.isText(node) || dom.isVisibleText(node) || dom.hasContentBefore(dom.hasContentBefore(ancestor)))) {
         return;
     }
     event.preventDefault();
@@ -1086,7 +1099,14 @@ $.summernote.pluginEvents.up = function (event, editor, layoutInfo) {
 $.summernote.pluginEvents.down = function (event, editor, layoutInfo) {
     var r = range.create();
     var node = dom.firstChild(r.sc.childNodes[r.so] || r.sc);
-    if (!r.isOnCell() || (!dom.isCell(node) && dom.hasContentAfter(node) && (!dom.isBR(dom.hasContentAfter(node)) || !dom.isText(node) || dom.isVisibleText(node) || dom.hasContentAfter(dom.hasContentAfter(node))))) {
+    if (!r.isOnCell()) {
+        return;
+    }
+    // check if an ancestor between node and cell has content after
+    var ancestor = dom.ancestor(node, function (ancestorNode) {
+        return dom.hasContentAfter(ancestorNode) || dom.isCell(ancestorNode);
+    });
+    if (!dom.isCell(ancestor) && (!dom.isBR(dom.hasContentAfter(ancestor)) || !dom.isText(node) || dom.isVisibleText(node) || dom.hasContentAfter(dom.hasContentAfter(ancestor)))) {
         return;
     }
     event.preventDefault();
@@ -1258,7 +1278,7 @@ $.summernote.pluginEvents.visible = function (event, editor, layoutInfo) {
 };
 
 function remove_table_content(r) {
-    var nodes = dom.listBetween(r.sc, r.ec);
+    var nodes = dom.listBetween(r.sc, r.ec, r.so, r.eo);
     if (dom.isText(r.sc)) {
         r.sc.textContent = r.sc.textContent.slice(0, r.so);
     }
@@ -1794,12 +1814,17 @@ $.summernote.pluginEvents.indent = function (event, editor, layoutInfo, outdent)
     var $dom = $(ancestor);
 
     if (!dom.isList(ancestor)) {
+        // to indent a selection, we indent the child nodes of the common
+        // ancestor that contains this selection
         $dom = $(dom.node(ancestor)).children();
     }
-    if (!$dom.length) {
-        $dom = $(dom.ancestor(r.sc, dom.isList) || dom.ancestor(r.sc, dom.isCell));
+    if (!$dom.not('br').length) {
+        // if selection is inside a list, we indent its list items
+        $dom = $(dom.ancestor(r.sc, dom.isList));
         if (!$dom.length) {
-            $dom = $(r.sc).closest(options.styleTags.join(','));
+            // if the selection is contained in a single HTML node, we indent
+            // the first ancestor 'content block' (P, H1, PRE, ...) or TD
+            $dom = $(r.sc).closest(options.styleTags.join(',')+',td');
         }
     }
 
@@ -1866,6 +1891,15 @@ $.summernote.pluginEvents.formatBlock = function (event, editor, layoutInfo, sTa
     if (!r) {
         return;
     }
+    // select content since container (that firefox selects) may be removed
+    if (r.so === 0) {
+        r.sc = dom.firstChild(r.sc);
+    }
+    if (dom.nodeLength(r.ec) >= r.eo) {
+        r.ec = dom.lastChild(r.ec);
+        r.eo = dom.nodeLength(r.ec);
+    }
+    r = range.create(r.sc, r.so, r.ec, r.eo);
     r.reRange().select();
 
     if (sTagName === "blockquote" || sTagName === "pre") {
@@ -1879,6 +1913,10 @@ $.summernote.pluginEvents.formatBlock = function (event, editor, layoutInfo, sTa
     for (var i=0; i<nodes.length; i++) {
         if (dom.isBR(nodes[i]) || (dom.isText(nodes[i]) && dom.isVisibleText(nodes[i])) || dom.isB(nodes[i]) || dom.isU(nodes[i]) || dom.isS(nodes[i]) || dom.isI(nodes[i]) || dom.isFont(nodes[i])) {
             var ancestor = dom.ancestor(nodes[i], isFormatNode);
+            if ($(ancestor).parent().is('blockquote')) {
+                // firefox may wrap formatting block in blockquote
+                $(ancestor).unwrap();
+            }
             if (!ancestor) {
                 dom.wrap(nodes[i], sTagName);
             } else if (ancestor.tagName.toLowerCase() !== sTagName) {
@@ -1964,7 +2002,13 @@ eventHandler.modules.toolbar.button.updateRecentColor = function (elBtn, sEvent,
 };
 
 $(document).on('click keyup', function () {
-    var $popover = $((range.create()||{}).sc).closest('[contenteditable]');
+    var current_range = {};
+    try {
+        current_range = range.create() || {};
+    } catch (e) {
+        // if range is on Restricted element ignore error
+    }
+    var $popover = $(current_range.sc).closest('[contenteditable]');
     var popover_history = ($popover.data()||{}).NoteHistory;
     if (!popover_history || popover_history === history) return;
     var editor = $popover.parent('.note-editor');
@@ -2064,14 +2108,16 @@ $.summernote.pluginEvents.applyFont = function (event, editor, layoutInfo, color
     }
 
     // apply font: foreColor, backColor, size (the color can be use a class text-... or bg-...)
-    var font, $font, fonts = [], className;
+    var ancestors, font, $font, fonts = [], className;
     var i;
     if (color || bgcolor || size) {
       for (i=0; i<nodes.length; i++) {
         node = nodes[i];
 
-        font = dom.ancestor(node, dom.isFont);
-        if (!font) {
+        ancestors = dom.listAncestor(node, dom.isFont);
+        font = ancestors.slice(-1)[0];
+        // add font if node is not inside a font or inside an anchor firstly
+        if (!dom.isFont(font) || ancestors.filter(dom.isAnchor).length) {
           if (node.textContent.match(/^[ ]|[ ]$/)) {
             node.textContent = node.textContent.replace(/^[ ]|[ ]$/g, '\u00A0');
           }
@@ -2155,7 +2201,7 @@ $.summernote.pluginEvents.applyFont = function (event, editor, layoutInfo, color
     // select nodes to clean (to remove empty font and merge same nodes)
     nodes = [];
     dom.walkPoint(startPoint, endPoint, function (point) {
-      nodes.push(point.node);
+      nodes.push(point.node.childNodes[point.offset] || point.node);
     });
     nodes = list.unique(nodes);
 
@@ -2170,15 +2216,12 @@ $.summernote.pluginEvents.applyFont = function (event, editor, layoutInfo, color
     }
 
     // remove node without attributes (move content), and merge the same nodes
-    if (!dom.isImgFont(node)) {
      var className2, style, style2;
      for (i=0; i<nodes.length; i++) {
       node = nodes[i];
 
-      if ((dom.isText(node) || dom.isBR(node)) && !dom.isVisibleText(node)) {
+      if (dom.isText(node) && !node.nodeValue) {
         remove(node);
-        nodes.splice(i,1);
-        i--;
         continue;
       }
 
@@ -2195,23 +2238,18 @@ $.summernote.pluginEvents.applyFont = function (event, editor, layoutInfo, color
 
       if (!className && !style) {
         remove(node, node.parentNode);
-        nodes.splice(i,1);
-        i--;
         continue;
       }
 
-      if (i>0 && (font = dom.ancestor(nodes[i-1], dom.isFont))) {
+      if (font = dom.ancestor(node.previousSibling, dom.isFont)) {
         className2 = font.getAttribute('class');
         style2 = font.getAttribute('style');
         if (node !== font && className === className2 && style === style2) {
           remove(node, font);
-          nodes.splice(i,1);
-          i--;
           continue;
         }
       }
      }
-    }
 
     range.create(startPoint.node, startPoint.offset, endPoint.node, endPoint.offset).select();
 };
@@ -2253,11 +2291,12 @@ $.summernote.pluginEvents.backColor = function (event, editor, layoutInfo, backC
 };
 
 options.onCreateLink = function (sLinkUrl) {
-    if (sLinkUrl.indexOf('mailto:') === 0) {
-      // pass
+    if (sLinkUrl.indexOf('mailto:') === 0 || sLinkUrl.indexOf('tel:') === 0) {
+      sLinkUrl = sLinkUrl.replace(/^tel:([0-9]+)$/, 'tel://$1');
     } else if (sLinkUrl.indexOf('@') !== -1 && sLinkUrl.indexOf(':') === -1) {
       sLinkUrl =  'mailto:' + sLinkUrl;
-    } else if (sLinkUrl.indexOf('://') === -1 && sLinkUrl.indexOf('/') !== 0 && sLinkUrl.indexOf('#') !== 0) {
+    } else if (sLinkUrl.indexOf('://') === -1 && sLinkUrl[0] !== '/'
+               && sLinkUrl[0] !== '#' && sLinkUrl.slice(0, 2) !== '${') {
       sLinkUrl = 'http://' + sLinkUrl;
     }
     return sLinkUrl;

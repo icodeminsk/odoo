@@ -1,7 +1,9 @@
 # -*- coding: utf-8 -*-
 # Part of Odoo. See LICENSE file for full copyright and licensing details.
 
+from collections import defaultdict
 from datetime import date, datetime, timedelta
+import pytz
 
 from odoo import api, exceptions, fields, models, _
 
@@ -72,12 +74,12 @@ class MailActivity(models.Model):
     activity_type_id = fields.Many2one(
         'mail.activity.type', 'Activity',
         domain="['|', ('res_model_id', '=', False), ('res_model_id', '=', res_model_id)]")
-    activity_category = fields.Selection(related='activity_type_id.category')
-    icon = fields.Char('Icon', related='activity_type_id.icon')
+    activity_category = fields.Selection(related='activity_type_id.category', readonly=True)
+    icon = fields.Char('Icon', related='activity_type_id.icon', readonly=True)
     summary = fields.Char('Summary')
-    note = fields.Html('Note')
+    note = fields.Html('Note', sanitize_style=True)
     feedback = fields.Html('Feedback')
-    date_deadline = fields.Date('Due Date', index=True, required=True, default=fields.Date.today)
+    date_deadline = fields.Date('Due Date', index=True, required=True, default=fields.Date.context_today)
     # description
     user_id = fields.Many2one(
         'res.users', 'Assigned to',
@@ -89,7 +91,7 @@ class MailActivity(models.Model):
         ('planned', 'Planned')], 'State',
         compute='_compute_state')
     recommended_activity_type_id = fields.Many2one('mail.activity.type', string="Recommended Activity Type")
-    previous_activity_type_id = fields.Many2one('mail.activity.type', string='Previous Activity Type')
+    previous_activity_type_id = fields.Many2one('mail.activity.type', string='Previous Activity Type', readonly=True)
     has_recommended_activities = fields.Boolean(
         'Next activities available',
         compute='_compute_has_recommended_activities',
@@ -108,8 +110,16 @@ class MailActivity(models.Model):
 
     @api.depends('date_deadline')
     def _compute_state(self):
-        today = date.today()
+        today_default = date.today()
+
         for record in self.filtered(lambda activity: activity.date_deadline):
+            today = today_default
+            tz = record.user_id.sudo().tz
+            if tz:
+                today_utc = pytz.UTC.localize(datetime.utcnow())
+                today_tz = today_utc.astimezone(pytz.timezone(tz))
+                today = date(year=today_tz.year, month=today_tz.month, day=today_tz.day)
+
             date_deadline = fields.Date.from_string(record.date_deadline)
             diff = (date_deadline - today)
             if diff.days == 0:
@@ -123,7 +133,13 @@ class MailActivity(models.Model):
     def _onchange_activity_type_id(self):
         if self.activity_type_id:
             self.summary = self.activity_type_id.summary
-            self.date_deadline = (datetime.now() + timedelta(days=self.activity_type_id.days))
+            tz = self.user_id.sudo().tz
+            if tz:
+                today_utc = pytz.UTC.localize(datetime.utcnow())
+                today = today_utc.astimezone(pytz.timezone(tz))
+            else:
+                today = datetime.now()
+            self.date_deadline = (today + timedelta(days=self.activity_type_id.days))
 
     @api.onchange('previous_activity_type_id')
     def _onchange_previous_activity_type_id(self):
@@ -132,7 +148,8 @@ class MailActivity(models.Model):
 
     @api.onchange('recommended_activity_type_id')
     def _onchange_recommended_activity_type_id(self):
-        self.activity_type_id = self.recommended_activity_type_id
+        if self.recommended_activity_type_id:
+            self.activity_type_id = self.recommended_activity_type_id
 
     @api.multi
     def _check_access(self, operation):
@@ -162,8 +179,9 @@ class MailActivity(models.Model):
                 self.env[model].browse(res_ids).check_access_rule(doc_operation)
             except exceptions.AccessError:
                 raise exceptions.AccessError(
-                    _('The requested operation cannot be completed due to security restrictions. Please contact your system administrator.\n\n(Document type: %s, Operation: %s)') %
-                    (self._description, operation))
+                    _('The requested operation cannot be completed due to security restrictions. Please contact your system administrator.\n\n(Document type: %s, Operation: %s)') % (self._description, operation)
+                    + ' - ({} {}, {} {})'.format(_('Records:'), res_ids[:6], _('User:'), self._uid)
+                )
 
     @api.model
     def create(self, values):
@@ -224,6 +242,19 @@ class MailActivity(models.Model):
         message = self.env['mail.message']
         if feedback:
             self.write(dict(feedback=feedback))
+
+        # Search for all attachments linked to the activities we are about to unlink. This way, we
+        # can link them to the message posted and prevent their deletion.
+        attachments = self.env['ir.attachment'].search_read([
+            ('res_model', '=', self._name),
+            ('res_id', 'in', self.ids),
+        ], ['id', 'res_id'])
+
+        activity_attachments = defaultdict(list)
+        for attachment in attachments:
+            activity_id = attachment['res_id']
+            activity_attachments[activity_id].append(attachment['id'])
+
         for activity in self:
             record = self.env[activity.res_model].browse(activity.res_id)
             record.message_post_with_view(
@@ -232,7 +263,18 @@ class MailActivity(models.Model):
                 subtype_id=self.env.ref('mail.mt_activities').id,
                 mail_activity_type_id=activity.activity_type_id.id,
             )
-            message |= record.message_ids[0]
+
+            # Moving the attachments in the message
+            # TODO: Fix void res_id on attachment when you create an activity with an image
+            # directly, see route /web_editor/attachment/add
+            activity_message = record.message_ids[0]
+            message_attachments = self.env['ir.attachment'].browse(activity_attachments[activity.id])
+            message_attachments.write({
+                'res_id': activity_message.id,
+                'res_model': activity_message._name,
+            })
+            activity_message.attachment_ids = message_attachments
+            message |= activity_message
 
         self.unlink()
         return message.ids and message.ids[0] or False
@@ -316,6 +358,15 @@ class MailActivityMixin(models.AbstractModel):
     @api.model
     def _search_activity_summary(self, operator, operand):
         return [('activity_ids.summary', operator, operand)]
+
+    @api.multi
+    def write(self, vals):
+        # Delete activities of archived record.
+        if 'active' in vals and vals['active'] is False:
+            self.env['mail.activity'].sudo().search(
+                [('res_model', '=', self._name), ('res_id', 'in', self.ids)]
+            ).unlink()
+        return super(MailActivityMixin, self).write(vals)
 
     @api.multi
     def unlink(self):

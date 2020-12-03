@@ -68,8 +68,12 @@ rte.Class.include({
         $(".js_tweet, .js_comment").off('mouseup').trigger('mousedown');
         return this._super.apply(this, arguments);
     },
-    _saveElement: function ($el, context) {
+    _saveElement: function ($el, context, withLang) {
         var defs = [this._super.apply(this, arguments)];
+        // do not save cover in translation mode
+        if (withLang) {
+            return defs[0];
+        }
         // TODO the o_dirty class is not put on the right element for blog cover
         // edition. For some strange reason, it was forcly put (even if not
         // dirty) in <= saas-16 but this is not the case anymore.
@@ -132,7 +136,11 @@ options.registry.blog_cover = options.Class.extend({
         this.$image.css("background-image", "");
     },
     change: function (previewMode, value, $li) {
-        var $image = $("<img/>", {src: this.$image.css("background-image")});
+        var $image = $("<img/>");
+        var background = this.$image.css("background-image");
+        if (background && background !== "none") {
+            $image.attr('src', background.match(/^url\(["']?(.+?)["']?\)$/)[1]);
+        }
 
         var editor = new widget.MediaDialog(this, {only_images: true}, $image, $image[0]).open();
         editor.on("save", this, function (event, img) {

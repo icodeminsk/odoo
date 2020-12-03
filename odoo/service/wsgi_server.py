@@ -41,7 +41,7 @@ RPC_FAULT_CODE_ACCESS_ERROR = 4
 
 def xmlrpc_handle_exception_int(e):
     if isinstance(e, odoo.exceptions.UserError):
-        fault = xmlrpclib.Fault(RPC_FAULT_CODE_WARNING, odoo.tools.ustr(e.value))
+        fault = xmlrpclib.Fault(RPC_FAULT_CODE_WARNING, odoo.tools.ustr(e.name))
     elif isinstance(e, odoo.exceptions.RedirectWarning):
         fault = xmlrpclib.Fault(RPC_FAULT_CODE_WARNING, str(e))
     elif isinstance(e, odoo.exceptions.MissingError):
@@ -159,8 +159,22 @@ def application_unproxied(environ, start_response):
     # We never returned from the loop.
     return werkzeug.exceptions.NotFound("No handler found.\n")(environ, start_response)
 
+try:
+    # werkzeug >= 0.15
+    from werkzeug.middleware.proxy_fix import ProxyFix as ProxyFix_
+    # 0.15 also supports port and prefix, but 0.14 only forwarded for, proto
+    # and host so replicate that
+    ProxyFix = lambda app: ProxyFix_(app, x_for=1, x_proto=1, x_host=1)
+except ImportError:
+    # werkzeug < 0.15
+    from werkzeug.contrib.fixers import ProxyFix
+
 def application(environ, start_response):
+    # FIXME: is checking for the presence of HTTP_X_FORWARDED_HOST really useful?
+    #        we're ignoring the user configuration, and that means we won't
+    #        support the standardised Forwarded header once werkzeug supports
+    #        it
     if config['proxy_mode'] and 'HTTP_X_FORWARDED_HOST' in environ:
-        return werkzeug.contrib.fixers.ProxyFix(application_unproxied)(environ, start_response)
+        return ProxyFix(application_unproxied)(environ, start_response)
     else:
         return application_unproxied(environ, start_response)

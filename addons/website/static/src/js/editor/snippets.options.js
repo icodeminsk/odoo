@@ -63,9 +63,10 @@ options.registry.company_data = options.Class.extend({
     start: function () {
         var proto = options.registry.company_data.prototype;
         var def;
+        var self = this;
         if (proto.__link === undefined) {
             def = this._rpc({route: '/web/session/get_session_info'}).then(function (session) {
-                return this._rpc({
+                return self._rpc({
                     model: 'res.users',
                     method: 'read',
                     args: [session.uid, ['company_id']],
@@ -151,8 +152,14 @@ options.registry.carousel = options.Class.extend({
     onClone: function () {
         var id = 'myCarousel' + new Date().getTime();
         this.$target.attr('id', id);
-        this.$target.find('[data-slide]').attr('href', '#' + id);
-        this.$target.find('[data-slide-to]').attr('data-target', '#' + id);
+        _.each(this.$target.find('[data-slide], [data-slide-to]'), function (el) {
+            var $el = $(el);
+            if ($el.attr('data-target')) {
+                $el.attr('data-target', '#' + id);
+            } else if ($el.attr('href')) {
+                $el.attr('href', '#' + id);
+            }
+        });
     },
     /**
      * @override
@@ -181,7 +188,8 @@ options.registry.carousel = options.Class.extend({
         var $active = this.$inner.find('.item.active, .item.prev, .item.next').first();
         var index = $active.index();
         this.$('.carousel-control, .carousel-indicators').removeClass('hidden');
-        this.$indicators.append('<li data-target="#' + this.id + '" data-slide-to="' + cycle + '"></li>');
+        // we added a space after the <li> in the line below to keep the same space between the indicators
+        this.$indicators.append('<li data-target="#' + this.id + '" data-slide-to="' + cycle + '"></li> ');
         var $clone = this.$('.item:first').clone(true);
         $clone.removeClass('active').insertAfter($active);
         _.defer(function () {
@@ -240,8 +248,9 @@ options.registry.carousel = options.Class.extend({
      * @override
      */
     _setActive: function () {
-        this.$el.find('li[data-interval]').removeClass('active')
-            .filter('li[data-interval=' + this.$target.attr('data-interval') + ']').addClass('active');
+        this._super.apply(this, arguments);
+        this.$el.find('[data-interval]').removeClass('active')
+            .filter('[data-interval=' + this.$target.attr('data-interval') + ']').addClass('active');
     },
     /**
      * Rebinds carousel events on indicators.
@@ -423,7 +432,9 @@ options.registry.ul = options.Class.extend({
     toggleClass: function () {
         this._super.apply(this, arguments);
 
-        this.$target.data('snippet-view').destroy();
+        this.trigger_up('animation_stop_demand', {
+            $target: this.$target,
+        });
 
         this.$target.find('.o_ul_toggle_self, .o_ul_toggle_next').remove();
         this.$target.find('li:has(>ul,>ol)').map(function () {
@@ -562,9 +573,13 @@ options.registry.gallery = options.Class.extend({
      * @override
      */
     onBuilt: function () {
-        var uuid = new Date().getTime();
-        this.$target.find('.carousel').attr('id', 'slideshow_' + uuid);
-        this.$target.find('[data-target]').attr('data-target', '#slideshow_' + uuid);
+        this._adaptNavigationIDs();
+    },
+    /**
+     * @override
+     */
+    onClone: function () {
+        this._adaptNavigationIDs();
     },
     /**
      * @override
@@ -685,10 +700,10 @@ options.registry.gallery = options.Class.extend({
      */
     mode: function (previewMode, value, $li) {
         this.$target.css('height', '');
-        this[value]();
         this.$target
             .removeClass('o_nomode o_masonry o_grid o_slideshow')
             .addClass('o_' + value);
+        this[value]();
     },
     /**
      * Displays the images with the standard layout: floating images.
@@ -817,6 +832,21 @@ options.registry.gallery = options.Class.extend({
     // Private
     //--------------------------------------------------------------------------
 
+    /**
+     * @private
+     */
+    _adaptNavigationIDs: function () {
+        var uuid = new Date().getTime();
+        this.$target.find('.carousel').attr('id', 'slideshow_' + uuid);
+        _.each(this.$target.find('[data-slide], [data-slide-to]'), function (el) {
+            var $el = $(el);
+            if ($el.attr('data-target')) {
+                $el.attr('data-target', '#slideshow_' + uuid);
+            } else if ($el.attr('href')) {
+                $el.attr('href', '#slideshow_' + uuid);
+            }
+        });
+    },
     /**
      * Returns the images, sorted by index.
      *
